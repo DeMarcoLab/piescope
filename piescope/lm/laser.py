@@ -56,4 +56,31 @@ def set_laser_enable(wavelength, onoff):
     return command
 
 
-set_laser_enable(405, "on")
+def set_laser_emit(wavelength, onoff):
+    if isinstance(wavelength, int):
+        if wavelength == 405:
+            laser = "laser1"
+        elif wavelength == 488:
+            laser = "laser2"
+        elif wavelength == 561:
+            laser = "laser3"
+        elif wavelength == 640:
+            laser = "laser4"
+        else:
+            raise ValueError('Expecting a wavelength of 405, 488, 561 or 640')
+    else:
+        raise TypeError('Wavelength must be an integer')
+
+    if isinstance(onoff, str):
+        if onoff.lower() == "on":
+            command = "(param-set! '" + laser + ":cw #t)\r"
+        elif onoff.lower() == "off":
+            command = "(param-set! '" + laser + ":cw #f)\r"
+        else:
+            raise ValueError('On/off value must be "on" or "off"')
+    else:
+        raise TypeError('On/off value must be a string')
+
+    return command
+
+
