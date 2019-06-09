@@ -1,5 +1,8 @@
 """Module for laser control via serial communication."""
 
+import time
+
+import serial
 
 def set_laser_power(wavelength, power_percentage):
     if isinstance(wavelength, int):
@@ -84,3 +87,8 @@ def set_laser_emit(wavelength, onoff):
     return command
 
 
+def serial_write(command, port):
+    ser = serial.Serial(port, baudrate=115200, timeout=1)
+    ser.write(bytes(command, 'utf-8'))
+    time.sleep(1)
+    ser.close()
