@@ -44,9 +44,9 @@ def set_laser_enable(wavelength, onoff):
         raise TypeError('Wavelength must be an integer')
 
     if isinstance(onoff, str):
-        if onoff.lower == "on":
+        if onoff.lower() == "on":
             command = "(param-set! '" + laser + ":enable #t)\r"
-        elif onoff.lower == "off":
+        elif onoff.lower() == "off":
             command = "(param-set! '" + laser + ":enable #f)\r"
         else:
             raise ValueError('On/off value must be "on" or "off"')
@@ -54,3 +54,6 @@ def set_laser_enable(wavelength, onoff):
         raise TypeError('On/off value must be a string')
 
     return command
+
+
+set_laser_enable(405, "on")
