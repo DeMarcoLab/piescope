@@ -4,13 +4,13 @@
 def set_laser_power(wavelength, power_percentage):
     if isinstance(wavelength, int):
         if wavelength == 405:
-            laser = "1"
+            laser = "laser1"
         elif wavelength == 488:
-            laser = "2"
+            laser = "laser2"
         elif wavelength == 561:
-            laser = "3"
+            laser = "laser3"
         elif wavelength == 640:
-            laser = "4"
+            laser = "laser4"
         else:
             raise ValueError('Expecting a wavelength of 405, 488, 561 or 640')
     else:
@@ -27,12 +27,3 @@ def set_laser_power(wavelength, power_percentage):
         raise TypeError('Power percentage must be an integer')
 
     return command
-
-# set_laser_power(405, 12)
-# set_laser_power(405, 122)
-# set_laser_power(405, 12.2)
-# set_laser_power(405, 0.0)
-# set_laser_power(405.0, 12)
-# set_laser_power(404, 122)
-# set_laser_power(404, 12.2)
-# set_laser_power(404, -2)
