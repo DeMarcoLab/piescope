@@ -35,11 +35,6 @@ class Basler():
             grabResult.Release()
         return self.imageList
 
-test = Basler()
-test2 = test.get_frame()
-
-
-
 # TODO: non-blocking live imaging
 # def live_image():
 #     pass
