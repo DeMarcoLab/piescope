@@ -26,8 +26,13 @@ def set_laser_power(wavelength, power_percentage):
                 power_percentage) + ")\r"
         else:
             raise ValueError('Power percentage must be between 0 and 100')
+    elif isinstance(power_percentage, float):
+        if (power_percentage <= 100) & (power_percentage >= 0):
+            power_percentage = round(power_percentage)
+            command = "(param-set! '" + laser + ":level " + str(
+                power_percentage) + ")\r"
     else:
-        raise TypeError('Power percentage must be an integer')
+        raise TypeError('Power percentage must be an integer or float')
 
     return command
 
