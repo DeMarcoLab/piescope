@@ -2,5 +2,6 @@ numpy==1.13.3
 matplotlib==2.0.0
 scikit-image==0.14.0
 scipy==1.1.0
+pypylon
 pyserial
 PyYAML
