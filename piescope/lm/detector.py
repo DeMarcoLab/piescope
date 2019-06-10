@@ -21,14 +21,9 @@ class Basler():
                 5000, pylon.TimeoutHandling_ThrowException)
 
             if grabResult.GrabSucceeded():
-                print("SizeX: ", grabResult.Width)
-                print("SizeY: ", grabResult.Height)
                 img = grabResult.Array
                 self.imageList.append(img)
                 self.currentImageIndex = self.currentImageIndex + 1
-                print(img)
-                print("Gray value of first pixel: ", img[0, 0])
-                print(self.imageList)
             else:
                 print("Error: ", grabResult.Errorcode,
                       grabResult.ErrorDescription)
