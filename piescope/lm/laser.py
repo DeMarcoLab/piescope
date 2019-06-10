@@ -5,6 +5,7 @@ import time
 import serial
 
 def set_laser_power(wavelength, power_percentage):
+    """Create command string to change laser power to 'power_percentage'"""
     if isinstance(wavelength, int):
         if wavelength == 405:
             laser = "laser1"
@@ -32,6 +33,7 @@ def set_laser_power(wavelength, power_percentage):
 
 
 def set_laser_enable(wavelength, onoff):
+    """Create command string to change laser enabled to 'onoff' value"""
     if isinstance(wavelength, int):
         if wavelength == 405:
             laser = "laser1"
@@ -60,6 +62,7 @@ def set_laser_enable(wavelength, onoff):
 
 
 def set_laser_emit(wavelength, onoff):
+    """Create command string to change laser emit to 'onoff' value"""
     if isinstance(wavelength, int):
         if wavelength == 405:
             laser = "laser1"
@@ -88,6 +91,7 @@ def set_laser_emit(wavelength, onoff):
 
 
 def _serial_write(command, port):
+    """Send command string over serial port 'port' to set laser parameters"""
     ser = serial.Serial(port, baudrate=115200, timeout=1)
     ser.write(bytes(command, 'utf-8'))
     time.sleep(1)
