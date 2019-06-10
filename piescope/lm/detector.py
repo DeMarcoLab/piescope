@@ -2,33 +2,30 @@
 
 from pypylon import pylon
 
+
 class Basler():
+    """Class for each Basler fluorescence detector camera instance"""
     def __init__(self):
+        """Initialise camera settings"""
         super(Basler, self).__init__()
         self.camera = pylon.InstantCamera(
             pylon.TlFactory.GetInstance().CreateFirstDevice())
         print("Using device ", self.camera.GetDeviceInfo().GetModelName())
         self.camera.MaxNumBuffer = 1
-        self.imageCount = 1
-        self.currentImageIndex = 0
-        self.imageList = []
 
     def get_frame(self):
-        self.camera.StartGrabbingMax(self.imageCount)
-        self.imageList = []
+        """Grab a single frame from Basler fluorescence detector"""
+        self.camera.StartGrabbingMax(1)
         while self.camera.IsGrabbing():
             grabResult = self.camera.RetrieveResult(
-                5000, pylon.TimeoutHandling_ThrowException)
-
+                5000)
             if grabResult.GrabSucceeded():
-                img = grabResult.Array
-                self.imageList.append(img)
-                self.currentImageIndex = self.currentImageIndex + 1
+                image = grabResult.Array
             else:
-                print("Error: ", grabResult.Errorcode,
+                print("Warning: ", grabResult.Errorcode,
                       grabResult.ErrorDescription)
             grabResult.Release()
-        return self.imageList
+        return image
 
 # TODO: non-blocking live imaging
 # def live_image():
