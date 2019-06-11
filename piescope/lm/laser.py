@@ -36,13 +36,13 @@ def initialize_lasers(serial_port=None):
         except Exception:
             warnings.warn('Default laser serial port not available.\n'
                           'Fall back to {}'.format(_available_port_names[0]))
-            serial_port = _connect_serial_port(_available_port_names[0])
+            serial_port = connect_serial_port(_available_port_names[0])
     all_lasers = [Laser(name, serial_port)
                   for name in list(_laser_name_to_wavelength)]
     return all_lasers
 
 
-def _connect_serial_port(port=DEFAULT_SERIAL_PORT, baudrate=115200, timeout=1):
+def connect_serial_port(port=DEFAULT_SERIAL_PORT, baudrate=115200, timeout=1):
     """Serial port for communication with the lasers.
 
     Parameters
