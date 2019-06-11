@@ -1,103 +1,172 @@
 """Module for laser control via serial communication."""
 
 import time
+import warnings
 
 import serial
+import serial.tools.list_ports
 
-def set_laser_power(wavelength, power_percentage):
-    """Create command string to change laser power to 'power_percentage'"""
-    if isinstance(wavelength, int):
-        if wavelength == 405:
-            laser = "laser1"
-        elif wavelength == 488:
-            laser = "laser2"
-        elif wavelength == 561:
-            laser = "laser3"
-        elif wavelength == 640:
-            laser = "laser4"
+DEFAULT_SERIAL_PORT = 'COM6'  # default laser serial communication port
+_available_serial_ports = serial.tools.list_ports.comports()
+_available_port_names = [port.device for port in _available_serial_ports]
+_available_lasers = (("laser1", 405),
+                     ("laser2", 488),
+                     ("laser3", 561),
+                     ("laser4", 640))
+_laser_name_to_wavelength = {i[0]: i[1] for i in _available_lasers}
+_laser_wavelength_to_name = {i[1]: i[0] for i in _available_lasers}
+
+
+def initialize_lasers(serial_port=None):
+    """Initialize all available lasers.
+
+    Parameters
+    ----------
+    serial_port : pyserial Serial() object, optional
+        Serial port for communication with the lasers.
+
+    Returns
+    -------
+    list
+        List of Laser() objects for all available lasers.
+    """
+    if serial_port is None:
+        try:
+            serial_port = _connect_serial_port()
+        except Exception:
+            warnings.warn('Default laser serial port not available.\n'
+                          'Fall back to {}'.format(_available_port_names[0]))
+            serial_port = _connect_serial_port(_available_port_names[0])
+    all_lasers = [Laser(name, serial_port)
+                  for name in list(_laser_name_to_wavelength)]
+    return all_lasers
+
+
+def _connect_serial_port(port=DEFAULT_SERIAL_PORT, baudrate=115200, timeout=1):
+    """Serial port for communication with the lasers.
+
+    Parameters
+    ----------
+    port : str, optional
+        Serial port device name, by default 'COM6'.
+    baudrate : int, optional
+        Rate of communication, by default 115200 bits per second.
+    timeout : int, optional
+        Timeout period, by default 1 second.
+
+    Returns
+    -------
+    pyserial Serial() object
+        Serial port for communication with the lasers.
+    """
+    if port == DEFAULT_SERIAL_PORT:
+        if DEFAULT_SERIAL_PORT not in _available_port_names:
+            warnings.warn('Default laser serial port not available.\n'
+                          'Fall back to port {}'.format())
+            port = _available_port_names[0]
+    return serial.Serial(port, baudrate=baudrate, timeout=timeout)
+
+
+class Laser():
+    """Laser class."""
+
+    def __init__(self, name, serial_port, laser_power=1.):
+        """Initialize instance of Laser class. Laser enabled by default.
+
+        Parameters
+        ----------
+        name : str
+            Laser name string for serial communication.
+            Available options:
+            * "laser1" with wavelength 405nm (DAPI)
+            * "laser2" with wavelength 488nm (GFP)
+            * "laser3" with wavelength 561nm (RFP)
+            * "laser4" with wavelength 640nm (far-red)
+        serial_port : pyserial Serial() object
+            Serial communication port for the laser.
+        laser_power : float, optional
+            Laser power percentage, by default 1%.
+        """
+        self.NAME = name
+        self.WAVELENGTH = _laser_name_to_wavelength[self.NAME]
+        self.SERIAL_PORT = serial_port
+        self._laser_power = laser_power
+        self.enable()
+
+    def emit(self, duration):
+        """Emit laser light for a set duration.
+
+        Parameters
+        ----------
+        duration : time the laser is on, in seconds.
+        """
+        command_turn_on = "(param-set! '" + self.NAME + ":cw #t)\r"
+        command_turn_off = "(param-set! '" + self.NAME + ":cw #f)\r"
+        self._write_serial_command(command_turn_on)
+        time.sleep(duration)
+        self._write_serial_command(command_turn_off)
+        return command_turn_on, command_turn_off
+
+    def enable(self):
+        """Enable the laser.
+
+        Returns
+        -------
+        str
+            Serial command to enable the laser.
+        """
+        command = "(param-set! '" + self.NAME + ":enable #t)\r"
+        self._write_serial_command(command)
+        self.enabled = True
+        return command
+
+    def disable(self):
+        """Disable the laser.
+
+        Returns
+        -------
+        str
+            Serial command to disable the laser.
+        """
+        command = "(param-set! '" + self.NAME + ":enable #f)\r"
+        self._write_serial_command(command)
+        self.enabled = False
+        return command
+
+    @property
+    def laser_power(self):
+        return self._laser_power
+
+    @laser_power.setter
+    def laser_power(self, value):
+        """Laser power percentage.
+
+        Parameters
+        ----------
+        value : int or float
+            Laser power percentage.
+
+        Returns
+        -------
+        str
+            Serial command to set the laser power percentage.
+
+        Raises
+        ------
+        ValueError
+            Laser power percentage is limited to between 0 and 100.
+        """
+        if 0 < value < 100:
+            command = "(param-set! '" + self.NAME + \
+                ":level " + str(round(value, 2)) + ")\r"
+            self._write_serial_command(command)
+            self._laser_power = value
         else:
-            raise ValueError('Expecting a wavelength of 405, 488, 561 or 640')
-    else:
-        raise TypeError('Wavelength must be an integer')
+            raise ValueError('Laser power percentage must be between 0 - 100')
+        return command
 
-    if isinstance(power_percentage, int):
-        if (power_percentage <= 100) & (power_percentage >= 0):
-            command = "(param-set! '" + laser + ":level " + str(
-                power_percentage) + ")\r"
-        else:
-            raise ValueError('Power percentage must be between 0 and 100')
-    elif isinstance(power_percentage, float):
-        if (power_percentage <= 100) & (power_percentage >= 0):
-            power_percentage = round(power_percentage)
-            command = "(param-set! '" + laser + ":level " + str(
-                power_percentage) + ")\r"
-    else:
-        raise TypeError('Power percentage must be an integer or float')
-
-    return command
-
-
-def set_laser_enable(wavelength, onoff):
-    """Create command string to change laser enabled to 'onoff' value"""
-    if isinstance(wavelength, int):
-        if wavelength == 405:
-            laser = "laser1"
-        elif wavelength == 488:
-            laser = "laser2"
-        elif wavelength == 561:
-            laser = "laser3"
-        elif wavelength == 640:
-            laser = "laser4"
-        else:
-            raise ValueError('Expecting a wavelength of 405, 488, 561 or 640')
-    else:
-        raise TypeError('Wavelength must be an integer')
-
-    if isinstance(onoff, str):
-        if onoff.lower() == "on":
-            command = "(param-set! '" + laser + ":enable #t)\r"
-        elif onoff.lower() == "off":
-            command = "(param-set! '" + laser + ":enable #f)\r"
-        else:
-            raise ValueError('On/off value must be "on" or "off"')
-    else:
-        raise TypeError('On/off value must be a string')
-
-    return command
-
-
-def set_laser_emit(wavelength, onoff):
-    """Create command string to change laser emit to 'onoff' value"""
-    if isinstance(wavelength, int):
-        if wavelength == 405:
-            laser = "laser1"
-        elif wavelength == 488:
-            laser = "laser2"
-        elif wavelength == 561:
-            laser = "laser3"
-        elif wavelength == 640:
-            laser = "laser4"
-        else:
-            raise ValueError('Expecting a wavelength of 405, 488, 561 or 640')
-    else:
-        raise TypeError('Wavelength must be an integer')
-
-    if isinstance(onoff, str):
-        if onoff.lower() == "on":
-            command = "(param-set! '" + laser + ":cw #t)\r"
-        elif onoff.lower() == "off":
-            command = "(param-set! '" + laser + ":cw #f)\r"
-        else:
-            raise ValueError('On/off value must be "on" or "off"')
-    else:
-        raise TypeError('On/off value must be a string')
-
-    return command
-
-
-def _serial_write(command, port):
-    """Send command string over serial port 'port' to set laser parameters"""
-    ser = serial.Serial(port, baudrate=115200, timeout=1)
-    ser.write(bytes(command, 'utf-8'))
-    time.sleep(1)
-    ser.close()
+    def _write_serial_command(self, command):
+        self.SERIAL_PORT.open()
+        bytelength = self.SERIAL_PORT.write(bytes(command, 'utf-8'))
+        self.SERIAL_PORT.close()
+        return bytelength
