@@ -32,7 +32,7 @@ def initialize_lasers(serial_port=None):
     """
     if serial_port is None:
         try:
-            serial_port = _connect_serial_port()
+            serial_port = connect_serial_port()
         except Exception:
             warnings.warn('Default laser serial port not available.\n'
                           'Fall back to {}'.format(_available_port_names[0]))
