@@ -9,16 +9,6 @@ from serialtestclass import SerialTestClass
 
 
 @pytest.fixture
-def serial_port_name():
-    if DEFAULT_SERIAL_PORT in _available_port_names:
-        serial_port_name = DEFAULT_SERIAL_PORT
-    else:
-        # Substitute the first serial port that does exist
-        serial_port_name = _available_port_names[0]
-    return serial_port_name
-
-
-@pytest.fixture
 def dummy_serial_port():
     dummy_serial_port = SerialTestClass()
     return dummy_serial_port
@@ -27,11 +17,6 @@ def dummy_serial_port():
 @pytest.fixture
 def dummy_laser():
     return laser.Laser("laser1", SerialTestClass(), laser_power=1.)
-
-
-def test__connect_serial_port(serial_port_name):
-    output = laser._connect_serial_port(port=serial_port_name)
-    assert isinstance(output, serial.Serial)
 
 
 def test_initialize_lasers():
