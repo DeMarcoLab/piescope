@@ -4,6 +4,7 @@ import skimage.io
 data_dir = os.path.abspath(os.path.dirname(__file__))
 
 __all__ = ['autoscript_image',
+           'basler_image',
            'data_dir',
            'embryo',
            'embryo_mask',
@@ -14,6 +15,13 @@ __all__ = ['autoscript_image',
 def autoscript_image():
     """Load a copy of the Autoscript offline emulated image."""
     filename = os.path.join(data_dir, 'autoscript.png')
+    img = skimage.io.imread(filename)
+    return img
+
+
+def basler_image():
+    """Load a copy of the Basler Fluorescence detector emulator image."""
+    filename = os.path.join(data_dir, 'basler.png')
     img = skimage.io.imread(filename)
     return img
 
