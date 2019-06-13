@@ -1,6 +1,7 @@
 import pytest
 pytest.importorskip('pypylon', reason="The pypylon library is not available.")
 
+
 @pytest.fixture
 def dummy_camera(monkeypatch):
     from pypylon import pylon
