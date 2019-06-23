@@ -93,6 +93,16 @@ class Laser():
         self._laser_power = laser_power
         self.enable()
 
+    def on(self):
+    command = "(param-set! '" + self.NAME + ":cw #t)\r"
+    self._write_serial_command(command)
+    return command
+
+    def off(self):
+    command = "(param-set! '" + self.NAME + ":cw #f)\r"
+    self._write_serial_command(command)
+    return command
+
     def emit(self, duration):
         """Emit laser light for a set duration.
 
