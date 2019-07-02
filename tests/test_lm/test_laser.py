@@ -18,6 +18,18 @@ def dummy_laser():
     return laser.Laser("laser1", SerialTestClass(), laser_power=1.)
 
 
+def test_laser_on(dummy_laser):
+    output = dummy_laser.on()
+    expected = "(param-set! 'laser1:cw #t)\r"
+    assert output == expected
+
+
+def test_laser_on(dummy_laser):
+    output = dummy_laser.off()
+    expected = "(param-set! 'laser1:cw #f)\r"
+    assert output == expected
+
+
 def test_initialize_lasers():
     from piescope.lm.laser import _laser_name_to_wavelength, _laser_wavelength_to_name, _available_lasers
     print(_available_lasers)
@@ -59,21 +71,6 @@ def test_laser_emit(dummy_laser):
     output_command_on, output_command_off = dummy_laser.emit(expected_duration)
     assert output_command_on == "(param-set! 'laser1:cw #t)\r"
     assert output_command_off == "(param-set! 'laser1:cw #f)\r"
-
-
-@pytest.mark.parametrize("expected_duration",
-                         [(0.005),
-                          (0.01),
-                          (0.05),
-                          (0.1),
-                          ],)
-def test_laser_emit_duration(dummy_laser, expected_duration):
-    start_time = time.perf_counter()
-    dummy_laser.emit(expected_duration)
-    end_time = time.perf_counter()
-    duration = end_time - start_time
-    assert duration >= expected_duration
-    assert duration <= 1.2 * expected_duration
 
 
 def test_laser_enable(dummy_laser):
