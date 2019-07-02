@@ -1,5 +1,5 @@
 """Module for laser control via serial communication."""
-
+import collections
 import time
 import warnings
 
@@ -13,8 +13,10 @@ _available_lasers = (("laser1", 405),
                      ("laser2", 488),
                      ("laser3", 561),
                      ("laser4", 640))
-_laser_name_to_wavelength = {i[0]: i[1] for i in _available_lasers}
-_laser_wavelength_to_name = {i[1]: i[0] for i in _available_lasers}
+_laser_name_to_wavelength = collections.OrderedDict(
+    (i[0], i[1]) for i in _available_lasers)
+_laser_wavelength_to_name = collections.OrderedDict(
+    (i[1], i[0]) for i in _available_lasers)
 
 
 def initialize_lasers(serial_port=None):
