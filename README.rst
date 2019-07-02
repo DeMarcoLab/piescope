@@ -30,7 +30,7 @@ See all the command line options available with:
 
 .. |appveyor-build-status| image:: https://ci.appveyor.com/api/projects/status/m3s3g96phg9m3p06/branch/develop?svg=true
     :alt: Appveyor build status
-    :target: https://ci.appveyor.com/api/projects/status/m3s3g96phg9m3p06/branch/develop?svg=true
+    :target: https://ci.appveyor.com/project/GenevieveBuckley/piescope
 
 .. |travis-build-status| image:: https://travis-ci.com/DeMarcoLab/piescope.svg?branch=develop
     :alt: Travis build status
