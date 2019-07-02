@@ -1,10 +1,9 @@
+import time
+
 import numpy as np
 import pytest
-import serial
-from timeit import default_timer as timer
 
 from piescope.lm import laser
-from piescope.lm.laser import DEFAULT_SERIAL_PORT, _available_port_names
 from serialtestclass import SerialTestClass
 
 
@@ -20,6 +19,10 @@ def dummy_laser():
 
 
 def test_initialize_lasers():
+    from piescope.lm.laser import _laser_name_to_wavelength, _laser_wavelength_to_name, _available_lasers
+    print(_available_lasers)
+    print(_laser_name_to_wavelength)
+    print(_laser_wavelength_to_name)
     output = laser.initialize_lasers(serial_port=SerialTestClass())
     assert len(output) == 4
     assert output[0].NAME == "laser1"
@@ -65,11 +68,12 @@ def test_laser_emit(dummy_laser):
                           (0.1),
                           ],)
 def test_laser_emit_duration(dummy_laser, expected_duration):
-    start_time = timer()
+    start_time = time.perf_counter()
     dummy_laser.emit(expected_duration)
-    end_time = timer()
+    end_time = time.perf_counter()
     duration = end_time - start_time
-    assert np.isclose(duration, expected_duration, atol=0.001)
+    assert duration >= expected_duration
+    assert duration <= 1.2 * expected_duration
 
 
 def test_laser_enable(dummy_laser):
