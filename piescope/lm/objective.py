@@ -21,7 +21,6 @@ class StageController(socket):
     def move_absolute(self, position, hold=0):
         cmd = pre_string + 'MPA0,' + str(position) + ',' + str(hold) + \
               post_string
-        print(cmd)
         ans = self.send_command(cmd)
         return ans
 
