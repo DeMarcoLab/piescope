@@ -14,7 +14,6 @@ class StageController(socket):
         self.settimeout(timeout)
         try:
             self.connect((host, port))
-            self.initialise_system_parameters()
         except Exception as error:
             raise RuntimeError('Cannot connect to Smaract.'
                                'Error: %s', error)
@@ -50,7 +49,6 @@ class StageController(socket):
 
     def move_relative(self, distance, hold=0):
         cmd = 'MPR0,' + str(distance) + ',' + str(hold)
-        print(cmd)
         ans = self.send_command(cmd)
         return ans
 
