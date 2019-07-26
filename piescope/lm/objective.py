@@ -14,6 +14,7 @@ class StageController(socket):
         self.settimeout(timeout)
         try:
             self.connect((host, port))
+            print('Successfully connected to Smaract')
         except Exception as error:
             raise RuntimeError('Cannot connect to Smaract.'
                                'Error: %s', error)
@@ -21,11 +22,11 @@ class StageController(socket):
     def initialise_system_parameters(self, relative_accumulation=0,
                                      reference_mark=0, reference_hold=1000,
                                      start_position=0):
-        print("Successfully connected to Smaract.  Initialising parameters.")
+        print('Initialising parameters.')
         self.set_relative_accumulation(relative_accumulation)
         self.find_reference_mark(reference_mark, reference_hold)
         self.set_start_position(start_position)
-        print("Successfully initalised.")
+        print('Successfully initalised.')
 
     def set_relative_accumulation(self, onoff):
         cmd = 'SARP0,' + str(onoff)
@@ -56,7 +57,6 @@ class StageController(socket):
         cmd = 'GP0'
         ans = self.send_command(cmd)
         position = str(ans).rsplit(',')[-1].split('\\')[0]
-        print('Current position is: ' + position)
         return position
 
     def send_command(self, cmd):
