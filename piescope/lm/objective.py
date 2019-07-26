@@ -55,8 +55,9 @@ class StageController(socket):
     def current_position(self):
         cmd = 'GP0'
         ans = self.send_command(cmd)
-        print('Current position is: ' + str(ans).rsplit(',')[-1].split('\\')[0])
-        return ans
+        position = str(ans).rsplit(',')[-1].split('\\')[0]
+        print('Current position is: ' + position)
+        return position
 
     def send_command(self, cmd):
         cmd = bytes(pre_string + cmd + post_string, 'utf-8')
