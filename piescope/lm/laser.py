@@ -1,4 +1,7 @@
 """Module for laser control via serial communication."""
+import collections
+import time
+import warnings
 
 import time
 import warnings
@@ -97,6 +100,7 @@ class Laser():
         self.SERIAL_PORT = serial_port
         self.laser_power = laser_power
         self.enable()
+
 
     def emit(self, duration):
         """Emit laser light for a set duration.

@@ -1,11 +1,10 @@
 import numpy as np
 import pytest
 import serial
-from timeit import default_timer as timer
+from serialtestclass import SerialTestClass
 
 from piescope.lm import laser
 from piescope.lm.laser import DEFAULT_SERIAL_PORT, _available_port_names
-from serialtestclass import SerialTestClass
 
 
 @pytest.fixture
@@ -56,20 +55,6 @@ def test_laser_emit(dummy_laser):
     output_command_on, output_command_off = dummy_laser.emit(expected_duration)
     assert output_command_on == "(param-set! 'laser1:cw #t)\r"
     assert output_command_off == "(param-set! 'laser1:cw #f)\r"
-
-
-@pytest.mark.parametrize("expected_duration",
-                         [(0.005),
-                          (0.01),
-                          (0.05),
-                          (0.1),
-                          ],)
-def test_laser_emit_duration(dummy_laser, expected_duration):
-    start_time = timer()
-    dummy_laser.emit(expected_duration)
-    end_time = timer()
-    duration = end_time - start_time
-    assert np.isclose(duration, expected_duration, atol=0.001)
 
 
 def test_laser_enable(dummy_laser):
