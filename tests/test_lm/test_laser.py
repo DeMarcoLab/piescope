@@ -16,35 +16,35 @@ def dummy_serial_port():
 
 @pytest.fixture
 def dummy_laser():
-    return laser.Laser("laser1", SerialTestClass(), laser_power=1.)
+    return laser.Laser("laser640", SerialTestClass(), laser_power=1.)
 
 
 def test_initialize_lasers():
     output = laser.initialize_lasers(serial_port=SerialTestClass())
     assert len(output) == 4
-    assert output[0].NAME == "laser1"
-    assert output[0].WAVELENGTH == 405
-    assert output[1].NAME == "laser2"
-    assert output[1].WAVELENGTH == 488
-    assert output[2].NAME == "laser3"
-    assert output[2].WAVELENGTH == 561
-    assert output[3].NAME == "laser4"
-    assert output[3].WAVELENGTH == 640
+    assert output["laser405"].NAME == "laser405"
+    assert output["laser405"].WAVELENGTH == 405
+    assert output["laser488"].NAME == "laser488"
+    assert output["laser488"].WAVELENGTH == 488
+    assert output["laser561"].NAME == "laser561"
+    assert output["laser561"].WAVELENGTH == 561
+    assert output["laser640"].NAME == "laser640"
+    assert output["laser640"].WAVELENGTH == 640
 
 
 def test_Laser_class(dummy_serial_port):
     expected_laser_power = 2.
-    output = laser.Laser("laser1", dummy_serial_port,
+    output = laser.Laser("laser405", dummy_serial_port,
                          laser_power=expected_laser_power)
     assert isinstance(output.SERIAL_PORT, SerialTestClass)
     assert np.isclose(output.laser_power, expected_laser_power)
 
 
 @pytest.mark.parametrize("name, expected_wavelength",
-                         [("laser1", 405),
-                          ("laser2", 488),
-                          ("laser3", 561),
-                          ("laser4", 640),
+                         [("laser405", 405),
+                          ("laser488", 488),
+                          ("laser561", 561),
+                          ("laser640", 640),
                           ],)
 def test_laser(name, expected_wavelength):
     new_laser = laser.Laser(name, SerialTestClass(), laser_power=1)
@@ -83,7 +83,7 @@ def test_laser_disable(dummy_laser):
 
 
 def test_laser_power():
-    new_laser = laser.Laser("laser1", SerialTestClass(), laser_power=1)
+    new_laser = laser.Laser("laser405", SerialTestClass(), laser_power=1)
     expected_laser_power = 3.3
     new_laser.laser_power = expected_laser_power
     assert np.isclose(new_laser.laser_power, expected_laser_power)
