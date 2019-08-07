@@ -9,7 +9,7 @@ post_string = '\012'
 
 
 class StageController(socket):
-    def __init__(self, host='130.194.192.40', port=139, timeout=3.0):
+    def __init__(self, host='169.254.92.1', port=139, timeout=3.0):
         super().__init__(family=AF_INET, type=SOCK_STREAM)
         self.settimeout(timeout)
         try:
