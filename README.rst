@@ -1,6 +1,6 @@
 PIE-scope: integrated cryo-correlative light and FIB/SEM microscopy
 
-|build-status| |docs|
+|appveyor-build-status| |travis-build-status| |docs|
 
 Installation
 ============
@@ -28,8 +28,12 @@ See all the command line options available with:
    python -m piescope --help
 
 
-.. |build-status| image:: https://travis-ci.com/DeMarcoLab/piescope.svg?branch=develop
-    :alt: build status
+.. |appveyor-build-status| image:: https://ci.appveyor.com/api/projects/status/m3s3g96phg9m3p06/branch/develop?svg=true
+    :alt: Appveyor build status
+    :target: https://ci.appveyor.com/project/GenevieveBuckley/piescope
+
+.. |travis-build-status| image:: https://travis-ci.com/DeMarcoLab/piescope.svg?branch=develop
+    :alt: Travis build status
     :target: https://travis-ci.com/DeMarcoLab/piescope
 
 .. |docs| image:: https://readthedocs.org/projects/piescope/badge/?version=develop
