@@ -11,7 +11,6 @@ class Basler():
             pylon.TlFactory.GetInstance().CreateFirstDevice())
         print("Using device ", self.camera.GetDeviceInfo().GetModelName())
         self.camera.Open()
-        # self.camera.ExposureTime = 1000
         self.camera.MaxNumBuffer = 1
         self.imageCount = 1
         self.currentImageIndex = 0
@@ -34,7 +33,7 @@ class Basler():
                 print("Gray value of first pixel: ", img[0, 0])
                 print(self.imageList)
             else:
-                print("Error: ", grabResult.Errorcode,
+                print("Error: ", grabResult.ErrorCode,
                       grabResult.ErrorDescription)
             grabResult.Release()
         return self.imageList
