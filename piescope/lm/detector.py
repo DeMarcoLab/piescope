@@ -1,7 +1,7 @@
 """Module for the Basler fluorescence detector."""
 
 from pypylon import pylon
-# from pypylon import genicam
+from pypylon import genicam
 
 
 class Basler():
