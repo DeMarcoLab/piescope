@@ -9,34 +9,29 @@ class Basler():
         super(Basler, self).__init__()
         self.camera = pylon.InstantCamera(
             pylon.TlFactory.GetInstance().CreateFirstDevice())
-        print("Using device ", self.camera.GetDeviceInfo().GetModelName())
+        print("Using device ", self.camera.GetDeviceInfo().GetModelName());
         self.camera.Open()
-        self.camera.MaxNumBuffer = 1
+        self.camera.MaxNumBuffer = 5
         self.imageCount = 1
         self.currentImageIndex = 0
-        self.imageList = []
+        self.image = []
 
-    def grab_frame(self):
+    def camera_grab(self):
         self.camera.StartGrabbingMax(self.imageCount)
-        self.imageList = []
+        self.image = []
+
         while self.camera.IsGrabbing():
             grabResult = self.camera.RetrieveResult(
                 5000, pylon.TimeoutHandling_ThrowException)
 
             if grabResult.GrabSucceeded():
-                print("SizeX: ", grabResult.Width)
-                print("SizeY: ", grabResult.Height)
-                img = grabResult.Array
-                self.imageList.append(img)
-                self.currentImageIndex = self.currentImageIndex + 1
-                print(img)
-                print("Gray value of first pixel: ", img[0, 0])
-                print(self.imageList)
+                # print("SizeX: ", grabResult.Width)
+                # print("SizeY: ", grabResult.Height)
+                self.image = grabResult.Array
             else:
-                print("Error: ", grabResult.ErrorCode,
-                      grabResult.ErrorDescription)
+                print("Error: ", grabResult.Errorcode, grabResult.ErrorDescription)
             grabResult.Release()
-        return self.imageList
+        return self.image
 
 
 # TODO: non-blocking live imaging
