@@ -3,11 +3,11 @@
 # Config for Basler Pylon software suite
 # https://www.baslerweb.com/en/sales-support/downloads/software-downloads/
 export PYTHON_VERSION="36"
-export PYLON_VERSION="5.2.0"
+export PYLON_VERSION="5.2.0.13457"
 export PYLON_MD5="fe9831729afeaf91005e93abc5e51d5b"
 export PYLON_INSTALLER="${HOME}/pylon.tar.gz"
-export PYLON_DIR="${HOME}/pylon-5.2.0.13457-x86_64"
-export PYLON_URL="https://www.baslerweb.com/fp-1551786516/media/downloads/software/pylon_software/pylon-${PYLON_VERSION}.13457-x86_64.tar.gz"
+export PYLON_DIR="${HOME}/pylon-${PYLON_VERSION}-x86_64"
+export PYLON_URL="https://www.baslerweb.com/fp-1551786516/media/downloads/software/pylon_software/pylon-${PYLON_VERSION}-x86_64.tar.gz"
 # Python pypylon library (install after the pylon software suite)
 # https://github.com/basler/pypylon/releases
 export PYPYLON_VERSION="1.4.0"

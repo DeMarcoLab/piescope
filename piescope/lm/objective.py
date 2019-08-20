@@ -59,6 +59,7 @@ class StageController(socket):
         position = str(ans).rsplit(',')[-1].split('\\')[0]
         return position
 
+
     def send_command(self, cmd):
         cmd = bytes(pre_string + cmd + post_string, 'utf-8')
         self.sendall(cmd)
