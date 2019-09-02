@@ -1,5 +1,6 @@
 from piescope.lm import objective, laser, detector
 import time
+import piescope_gui.inputoutput.main as inout
 
 
 # Assume minimum 0.5 microns per step maximum 300 microns total height
@@ -8,22 +9,26 @@ time_delay = 1
 count_max = 5
 threshold = 5
 
+DEFAULT_SAVE = 'C:\Users\Admin'
 
-def volume_acquisition(exposure_time, laser_list, laser_power_list, no_z_slices,
+
+def volume_acquisition(exposure_time, laser_dict, no_z_slices,
                        z_slice_distance):
 
-    total_volume_height = (no_z_slices-1)*z_slice_distance
+    total_volume_height = (int(no_z_slices)-1)*int(z_slice_distance)
     print('Total height is: %s' % str(total_volume_height) + '\n')
-    print('Distance between slices is: %s' % str(z_slice_distance) + '\n')
+    print('Number of slices is: %s' % no_z_slices + '\n')
+    print('Distance between slices is: %s' % z_slice_distance + '\n')
 
     stage_controller = objective.StageController()
     stage_controller.initialise_system_parameters(0, 0, 0, 0)
+    print('Stage controller successfully initialised \n')
 
     lasers = laser.initialize_lasers()
     print('Lasers successfully initialised \n')
 
     basler_detector = detector.Basler()
-    print('Connected to detector \n')
+    print('Successfully connected to detector \n')
 
     initial_position = str(get_position(stage_controller))
     print("Initial position is: %s \n" % initial_position)
@@ -36,26 +41,23 @@ def volume_acquisition(exposure_time, laser_list, laser_power_list, no_z_slices,
 
         count = 0
 
-        for i in range(0, len(laser_list)):
-            lasers[laser_list[i]].enable()
-            print([laser_list[i]])
+        for las, power in lasers.items():
+            lasers[las].enable()
 
-            print('Laser %s is now enabled' % str(laser_list[i]))
+            print('%s is now enabled' % las)
 
-            lasers[laser_list[i]].laser_power = laser_power_list[i]
-            print(laser_power_list[i])
-            print('Laser %s power is %s' %
-                  (str(laser_list[i]), str(laser_power_list[i])))
+            lasers[las].laser_power = power
+            print(' %s power is %s' % (las, power))
 
-            lasers[laser_list[i]].emit()
-            print('Laser %s now emitting' % str(laser_list[i]))
+            lasers[las].emit()
+            print('%s now emitting' % las)
 
             current_image = basler_detector.camera_grab()
 
-            #save this image
+            inout.save_image(current_image, DEFAULT_SAVE)
 
-            lasers[laser_list[i]].disable()
-            print('Laser %s now disabled' % str(laser_list[i]))
+            lasers[laser].disable()
+            print('%s now disabled' % las)
 
         target_position = int(initial_position) + \
             (int(total_volume_height/2)) - int((z_slice * z_slice_distance))
