@@ -9,7 +9,7 @@ time_delay = 1
 count_max = 5
 threshold = 5
 
-# DEFAULT_SAVE = 'C:\Users\Admin'
+DEFAULT_PATH = "C:\\Users\\Admin\\Pictures\\Basler"
 
 
 def volume_acquisition(exposure_time, laser_dict, no_z_slices,
@@ -54,7 +54,7 @@ def volume_acquisition(exposure_time, laser_dict, no_z_slices,
 
             current_image = basler_detector.camera_grab()
 
-            inout.save_image(current_image, DEFAULT_SAVE)
+            inout.save_image(current_image, DEFAULT_PATH)
 
             lasers[laser].disable()
             print('%s now disabled' % las)
