@@ -41,7 +41,7 @@ def volume_acquisition(exposure_time, laser_dict, no_z_slices,
 
         count = 0
 
-        for las, power in lasers.items():
+        for las, power in laser_dict.items():
             lasers[las].enable()
 
             print('%s is now enabled' % las)
