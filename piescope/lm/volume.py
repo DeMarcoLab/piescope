@@ -1,6 +1,6 @@
 from piescope.lm import objective, laser, detector
 import time
-import piescope_gui.inputoutput.main as inout
+import piescope_gui.interface.main as interface
 
 
 # Assume minimum 0.5 microns per step maximum 300 microns total height
@@ -12,7 +12,7 @@ threshold = 5
 DEFAULT_PATH = "C:\\Users\\Admin\\Pictures\\Basler"
 
 
-def volume_acquisition(exposure_time, laser_dict, no_z_slices,
+def volume_acquisition(self, exposure_time, laser_dict, no_z_slices,
                        z_slice_distance):
 
     try:
@@ -31,12 +31,13 @@ def volume_acquisition(exposure_time, laser_dict, no_z_slices,
         print("Could not connect to stage controller")
         return
 
-    try:
-        stage_controller.initialise_system_parameters(0, 0, 0, 0)
-        print('Stage controller successfully initialised \n')
-    except:
-        print("Could not initialise stage controller parameters")
-        return
+    # try:
+        # stage_controller.initialise_system_parameters(0, 0, 0, 0)
+        # time.sleep(time_delay)
+        # print('Stage controller successfully initialised \n')
+    # except:
+    #     print("Could not initialise stage controller parameters")
+    #     return
 
     try:
         lasers = laser.initialize_lasers()
@@ -61,6 +62,7 @@ def volume_acquisition(exposure_time, laser_dict, no_z_slices,
 
     try:
         stage_controller.move_relative(int(total_volume_height/2))
+        print('Moved to top of volume')
     except:
         print('Could not move stage to top of volume')
         return
@@ -68,22 +70,25 @@ def volume_acquisition(exposure_time, laser_dict, no_z_slices,
     try:
         position = str(get_position(stage_controller))
         print("Top of volume is located at: %s \n" % position)
+        time.sleep(time_delay)
     except:
         print('Could not find top of volume position')
         return
 
     try:
         loop_range = int(no_z_slices)
+        print("Loop range is: {}".format(loop_range))
     except ValueError:
         print('no_z_slices incorrect type, please enter an int')
 
     try:
-        for z_slice in range(1, loop_range):
+        for z_slice in range(0, loop_range):
 
             count = 0
 
             for las, power in laser_dict.items():
-
+                print("laser: {}".format(las))
+                print("power: {}".format(power))
                 try:
                     lasers[las].enable()
                     print('%s is now enabled' % las)
@@ -92,88 +97,115 @@ def volume_acquisition(exposure_time, laser_dict, no_z_slices,
                     return
 
                 try:
-                    lasers[las].laser_power = power
+                    lasers[las].laser_power = int(power)
                     print(' %s power is %s' % (las, power))
                 except:
                     print('Could not change %s power' % las)
                     return
 
                 try:
-                    lasers[las].emit()
+                    lasers[las].emission_on()
                     print('%s now emitting' % las)
                 except:
                     print('Could not emit %s' % las)
                     return
 
                 try:
-                    current_image = basler_detector.camera_grab()
+                    if las == 'laser561':
+                        basler_detector.camera.ExposureTime.SetValue(125000)
+                        print('Exposure time is: {}'.format(basler_detector.camera.ExposureTime.GetValue()))
+                    else:
+                        basler_detector.camera.ExposureTime.SetValue(20000)
+                        print('Exposure time is: {}'.format(basler_detector.camera.ExposureTime.GetValue()))
+                    self.current_image = basler_detector.camera_grab()
+                    self.array_list = self.current_image
                 except:
                     print('Could not grab basler image')
                     return
 
                 try:
-                    inout.save_image(current_image, DEFAULT_PATH)
+                    lasers[las].emission_off()
+                    time.sleep(1)
+                    print('%s stopped emitting' % las)
                 except:
-                    print('Could not save image at %s' % DEFAULT_PATH)
+                    print('Could not emit %s' % las)
                     return
 
                 try:
-                    lasers[laser].disable()
+                    self.string_list = ['Volume_image_' + str(z_slice+1) + '_of_' + str(loop_range) +
+                                        las]
+                    self.update_display()
+                except:
+                    print('Could not update display')
+                    return
+
+                try:
+                    self.save_image()
+                except:
+                    print('Could not save image')
+                    return
+
+                try:
+                    lasers[las].disable()
                     print('%s now disabled' % las)
                 except:
                     print('Could not disable %s' % las)
                     return
 
-        try:
-            target_position = int(initial_position) + \
-                (int(total_volume_height/2)) - int((z_slice * z_slice_distance))
-            print('Target position is: %s" % str(target_position))')
-        except:
-            print('Could not calculate target position')
-            return
-
-        try:
-            stage_controller.move_relative(-z_slice_distance)
-        except:
-            print('Failed to move stage controller by step distance')
-            return
-
-        try:
-            position = int(get_position(stage_controller))
-        except:
-            print('Failed to get current position after step movement')
-            return
-
-        try:
-            difference = position - target_position
-            print('Difference is: %s' % str(difference))
-        except:
-            print('Failed to find difference between desired and current pos')
-            return
-
-        while count < count_max and \
-                (difference > threshold or difference < -threshold):
             try:
-                stage_controller.move_relative(-difference)
+                target_position = float(total_volume_height/2.) + float(initial_position)\
+                                  - (float(z_slice) * float(z_slice_distance))
+                print('Initial position is: {}'.format(initial_position))
+                print('Z_slice is: {}'.format(z_slice))
+                print('z_slice_distance is: {}'.format(z_slice_distance))
+
+                print('Target position is: %s' % str(target_position))
             except:
-                print('Could not move controller by difference')
-                # return
+                print('Could not calculate target position')
+                return
 
             try:
-                position = int(get_position(stage_controller))
+                stage_controller.move_relative(-int(z_slice_distance))
             except:
-                print('Failed to retrieve position after correction')
-                # return
+                print('Failed to move stage controller by step distance')
+                return
+
+            try:
+                position = float(get_position(stage_controller))
+                print(position)
+            except:
+                print('Failed to get current position after step movement')
+                return
 
             try:
                 difference = position - target_position
                 print('Difference is: %s' % str(difference))
             except:
-                print('Failed to calculated difference after correction')
-                # return
+                print('Failed to find difference between desired and current pos')
+                return
 
-            count = count + 1
-            print(count)
+            while count < count_max and \
+                    (difference > threshold or difference < -threshold):
+                try:
+                    stage_controller.move_relative(-int(difference))
+                except:
+                    print('Could not move controller by difference')
+                    # return
+
+                try:
+                    position = float(get_position(stage_controller))
+                except:
+                    print('Failed to retrieve position after correction')
+                    # return
+
+                try:
+                    difference = position - target_position
+                    print('Difference is: %s' % str(difference))
+                except:
+                    print('Failed to calculated difference after correction')
+                    return
+
+                count = count + 1
 
     except:
         print("Laser loop error")
