@@ -9,7 +9,7 @@ post_string = '\012'
 
 
 class StageController(socket):
-    def __init__(self, host='130.194.248.58', port=139, timeout=5.0):
+    def __init__(self, host='130.194.248.59', port=139, timeout=5.0):
         super().__init__(family=AF_INET, type=SOCK_STREAM)
         self.settimeout(timeout)
         try:
@@ -58,7 +58,6 @@ class StageController(socket):
         ans = self.send_command(cmd)
         position = str(ans).rsplit(',')[-1].split('\\')[0]
         return position
-
 
     def send_command(self, cmd):
         cmd = bytes(pre_string + cmd + post_string, 'utf-8')
