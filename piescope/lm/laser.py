@@ -9,7 +9,7 @@ import warnings
 import serial
 import serial.tools.list_ports
 
-DEFAULT_SERIAL_PORT = 'COM6'  # default laser serial communication port
+DEFAULT_SERIAL_PORT = 'COM3'  # default laser serial communication port
 _available_serial_ports = serial.tools.list_ports.comports()
 _available_port_names = [port.device for port in _available_serial_ports]
 _available_lasers = (("laser640", "laser1", 640), # (far-red)
@@ -175,6 +175,7 @@ class Laser():
         return command
 
     def _write_serial_command(self, command):
+        self.SERIAL_PORT.close()
         self.SERIAL_PORT.open()
         bytelength = self.SERIAL_PORT.write(bytes(command, 'utf-8'))
         self.SERIAL_PORT.close()
