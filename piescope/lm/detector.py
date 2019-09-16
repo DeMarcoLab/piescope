@@ -9,7 +9,7 @@ class Basler():
         super(Basler, self).__init__()
         self.camera = pylon.InstantCamera(
             pylon.TlFactory.GetInstance().CreateFirstDevice())
-        print("Using device ", self.camera.GetDeviceInfo().GetModelName());
+        print("Using device ", self.camera.GetDeviceInfo().GetModelName())
         self.camera.Open()
         self.camera.MaxNumBuffer = 5
         self.imageCount = 1
@@ -29,7 +29,7 @@ class Basler():
                 # print("SizeY: ", grabResult.Height)
                 self.image = grabResult.Array
             else:
-                print("Error: ", grabResult.Errorcode, grabResult.ErrorDescription)
+                print("Error: ", grabResult.ErrorCode, grabResult.ErrorDescription)
             grabResult.Release()
         return self.image
 
