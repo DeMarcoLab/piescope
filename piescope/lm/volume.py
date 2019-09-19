@@ -1,7 +1,5 @@
 from piescope.lm import objective, laser, detector
 import time
-import piescope_gui.interface.main as interface
-
 
 # Assume minimum 0.5 microns per step maximum 300 microns total height
 
