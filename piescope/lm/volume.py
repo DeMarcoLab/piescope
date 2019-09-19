@@ -133,10 +133,12 @@ def volume_acquisition(self, exposure_time, laser_dict, no_z_slices,
                 try:
                     if las == 'laser561':
                         basler_detector.camera.ExposureTime.SetValue(125000)
-                        print('Exposure time is: {}'.format(basler_detector.camera.ExposureTime.GetValue()))
+                        print('Exposure time is: {}'.format(
+                            basler_detector.camera.ExposureTime.GetValue()))
                     else:
                         basler_detector.camera.ExposureTime.SetValue(20000)
-                        message = 'Exposure time is: {}'.format(basler_detector.camera.ExposureTime.GetValue())
+                        message = 'Exposure time is: {}'.format(
+                            basler_detector.camera.ExposureTime.GetValue())
                         print(message)
                         interaction.error_msg(self, message)
                         self.current_image = basler_detector.camera_grab()
@@ -158,8 +160,8 @@ def volume_acquisition(self, exposure_time, laser_dict, no_z_slices,
                     return
 
                 try:
-                    self.string_list = ['Volume_image_' + str(z_slice+1) + '_of_' + str(loop_range) +
-                                        las]
+                    self.string_list = ['Volume_image_' + str(z_slice+1)
+                                        + '_of_' + str(loop_range) + las]
                     self.update_display()
                 except:
                     message = 'Could not update display'
@@ -220,7 +222,7 @@ def volume_acquisition(self, exposure_time, laser_dict, no_z_slices,
                 difference = position - target_position
                 print('Difference is: %s' % str(difference))
             except:
-                message = 'Failed to find difference between desired and current pos'
+                message = 'Failed to find diff between desired and current pos'
                 print(message)
                 interaction.error_msg(self, message)
                 return
@@ -247,7 +249,7 @@ def volume_acquisition(self, exposure_time, laser_dict, no_z_slices,
                     difference = position - target_position
                     print('Difference is: %s' % str(difference))
                 except:
-                    message = 'Failed to calculated difference after correction'
+                    message = 'Failed to calculate difference after correction'
                     print(message)
                     interaction.error_msg(self, message)
                     return
