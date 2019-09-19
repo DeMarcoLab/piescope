@@ -1,6 +1,5 @@
 from piescope.lm import objective, laser, detector
 import time
-from PyQt5 import QtWidgets
 from piescope_gui import gui_interaction as interaction
 
 # Assume minimum 0.5 microns per step maximum 300 microns total height
