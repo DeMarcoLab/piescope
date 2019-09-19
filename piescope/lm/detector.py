@@ -9,13 +9,14 @@ class Basler():
         self.camera = pylon.InstantCamera(
             pylon.TlFactory.GetInstance().CreateFirstDevice())
         print("Using device ", self.camera.GetDeviceInfo().GetModelName())
-        self.camera.Open()
+
         self.camera.MaxNumBuffer = 5
         self.imageCount = 1
         self.currentImageIndex = 0
         self.image = []
 
     def camera_grab(self):
+        self.camera.Open()
         self.camera.StartGrabbingMax(self.imageCount)
         self.image = []
 
@@ -31,4 +32,6 @@ class Basler():
                 print("Error: ", grabResult.ErrorCode,
                       grabResult.ErrorDescription)
             grabResult.Release()
+        self.camera.Close()
+
         return self.image
