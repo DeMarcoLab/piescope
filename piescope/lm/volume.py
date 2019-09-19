@@ -185,7 +185,8 @@ def volume_acquisition(self, exposure_time, laser_dict, no_z_slices,
                     return
 
             try:
-                target_position = float(total_volume_height/2.) + float(initial_position)\
+                target_position = float(total_volume_height/2.) \
+                                  + float(initial_position) \
                                   - (float(z_slice) * float(z_slice_distance))
                 print('Initial position is: {}'.format(initial_position))
                 print('Z_slice is: {}'.format(z_slice))
