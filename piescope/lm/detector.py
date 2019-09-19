@@ -32,8 +32,3 @@ class Basler():
                 print("Error: ", grabResult.ErrorCode, grabResult.ErrorDescription)
             grabResult.Release()
         return self.image
-
-
-# TODO: non-blocking live imaging
-# def live_image():
-#     pass
