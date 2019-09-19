@@ -7,8 +7,6 @@ time_delay = 1
 count_max = 5
 threshold = 5
 
-DEFAULT_PATH = "C:\\Users\\Admin\\Pictures\\Basler"
-
 
 def volume_acquisition(self, exposure_time, laser_dict, no_z_slices,
                        z_slice_distance):
