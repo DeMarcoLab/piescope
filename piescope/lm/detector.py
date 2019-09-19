@@ -1,7 +1,6 @@
 """Module for the Basler fluorescence detector."""
 
 from pypylon import pylon
-from pypylon import genicam
 
 
 class Basler():
@@ -29,6 +28,7 @@ class Basler():
                 # print("SizeY: ", grabResult.Height)
                 self.image = grabResult.Array
             else:
-                print("Error: ", grabResult.ErrorCode, grabResult.ErrorDescription)
+                print("Error: ", grabResult.ErrorCode,
+                      grabResult.ErrorDescription)
             grabResult.Release()
         return self.image
