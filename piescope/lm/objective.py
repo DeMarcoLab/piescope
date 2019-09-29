@@ -24,6 +24,7 @@ class StageController(socket):
     def initialise_system_parameters(self, relative_accumulation=0,
                                      reference_mark=0, reference_hold=1000,
                                      start_position=0):
+
         try:
             print('Initialising parameters.')
             self.set_relative_accumulation(relative_accumulation)
@@ -82,6 +83,7 @@ class StageController(socket):
             return position
         except:
             interaction.error_msg(self, "Unable to fetch stage position")
+
 
     def send_command(self, cmd):
         try:
