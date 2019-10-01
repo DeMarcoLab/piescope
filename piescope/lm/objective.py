@@ -24,6 +24,7 @@ class StageController(socket):
     def initialise_system_parameters(self, relative_accumulation=0,
                                      reference_mark=0, reference_hold=1000,
                                      start_position=0):
+
         try:
             print('Initialising parameters.')
             self.set_relative_accumulation(relative_accumulation)
@@ -33,6 +34,7 @@ class StageController(socket):
         except:
             interaction.error_msg(self, "Error in initialising stage "
                                         "parameters")
+
 
     def set_relative_accumulation(self, onoff):
         try:
@@ -67,6 +69,7 @@ class StageController(socket):
             interaction.error_msg(self, "Unable to move the stage")
 
     def move_relative(self, distance, hold=0):
+
         try:
             cmd = 'MPR0,' + str(distance) + ',' + str(hold)
             ans = self.send_command(cmd)

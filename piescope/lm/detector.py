@@ -9,7 +9,6 @@ class Basler():
         self.camera = pylon.InstantCamera(
             pylon.TlFactory.GetInstance().CreateFirstDevice())
         print("Using device ", self.camera.GetDeviceInfo().GetModelName())
-
         self.camera.MaxNumBuffer = 5
         self.imageCount = 1
         self.currentImageIndex = 0
