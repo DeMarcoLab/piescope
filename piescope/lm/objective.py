@@ -35,6 +35,7 @@ class StageController(socket):
             interaction.error_msg(self, "Error in initialising stage "
                                         "parameters")
 
+
     def set_relative_accumulation(self, onoff):
         try:
             cmd = 'SARP0,' + str(onoff)
@@ -68,6 +69,7 @@ class StageController(socket):
             interaction.error_msg(self, "Unable to move the stage")
 
     def move_relative(self, distance, hold=0):
+
         try:
             cmd = 'MPR0,' + str(distance) + ',' + str(hold)
             ans = self.send_command(cmd)
