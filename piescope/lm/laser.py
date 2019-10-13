@@ -100,20 +100,6 @@ class Laser():
         self.SERIAL_PORT = serial_port
         self.laser_power = laser_power
         self.enable()
-    #
-    # def emit(self, duration):
-    #     """Emit laser light for a set duration.
-    #
-    #     Parameters
-    #     ----------
-    #     duration : time the laser is on, in seconds.
-    #     """
-    #     command_turn_on = "(param-set! '" + self.ID + ":cw #t)\r"
-    #     command_turn_off = "(param-set! '" + self.ID + ":cw #f)\r"
-    #     self._write_serial_command(command_turn_on)
-    #     time.sleep(duration)
-    #     self._write_serial_command(command_turn_off)
-    #     return command_turn_on, command_turn_off
 
     def emission_on(self):
         """Start emitting laser light"""
