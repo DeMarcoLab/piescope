@@ -60,6 +60,16 @@ def test_laser_disable(dummy_laser):
     assert output == "(param-set! 'laser1:enable #f)\r"
 
 
+def test_laser_emission_on(dummy_laser):
+    output = dummy_laser.emission_on()
+    assert output == "(param-set! 'laser1:cw #t)\r"
+
+
+def test_laser_emission_off(dummy_laser):
+    output = dummy_laser.emission_off()
+    assert output == "(param-set! 'laser1:cw #f)\r"
+
+
 def test_laser_power():
     new_laser = laser.Laser("laser405", SerialTestClass(), laser_power=1)
     expected_laser_power = 3.3
