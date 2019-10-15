@@ -50,13 +50,6 @@ def test_laser(name, expected_wavelength):
     assert new_laser.WAVELENGTH == expected_wavelength
 
 
-def test_laser_emit(dummy_laser):
-    expected_duration = 0.2
-    output_command_on, output_command_off = dummy_laser.emit(expected_duration)
-    assert output_command_on == "(param-set! 'laser1:cw #t)\r"
-    assert output_command_off == "(param-set! 'laser1:cw #f)\r"
-
-
 def test_laser_enable(dummy_laser):
     output = dummy_laser.enable()
     assert output == "(param-set! 'laser1:enable #t)\r"
