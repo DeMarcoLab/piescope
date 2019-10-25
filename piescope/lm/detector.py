@@ -23,8 +23,6 @@ class Basler():
                 5000, pylon.TimeoutHandling_ThrowException)
 
             if grabResult.GrabSucceeded():
-                # print("SizeX: ", grabResult.Width)
-                # print("SizeY: ", grabResult.Height)
                 self.image = grabResult.Array
             else:
                 print("Error: ", grabResult.ErrorCode,
