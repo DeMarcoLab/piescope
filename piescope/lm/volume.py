@@ -1,5 +1,6 @@
 import logging
 import time
+import numpy as np
 
 from piescope.lm import objective, laser, detector
 
@@ -12,8 +13,7 @@ count_max = 5
 threshold = 5
 
 
-def volume_acquisition(main_gui, exposure_time, laser_dict, no_z_slices,
-                       z_slice_distance):
+def volume_acquisition(laser_dict, no_z_slices, z_slice_distance):
 
     total_volume_height = (int(no_z_slices)-1)*int(z_slice_distance)
     logger.debug('Total height is: %s' % str(total_volume_height) + '\n')
@@ -27,6 +27,10 @@ def volume_acquisition(main_gui, exposure_time, laser_dict, no_z_slices,
 
     basler_detector = detector.Basler()
     logger.debug('Successfully connected to detector \n')
+    sizing_image = basler_detector.camera_grab()
+    sizing_shape = np.shape(sizing_image)
+
+    volume = np.ndarray(shape=(no_z_slices, sizing_shape[0], sizing_shape[1], len(laser_dict)), dtype=np.int8)
 
     initial_position = str(get_position(stage_controller))
     logger.debug("Initial position is: %s \n" % initial_position)
@@ -41,44 +45,32 @@ def volume_acquisition(main_gui, exposure_time, laser_dict, no_z_slices,
     loop_range = int(no_z_slices)
     print("Loop range is: {}".format(loop_range))
 
+    # initialise laser powers
+    for las, power in laser_dict.items():
+        lasers[las].laser_power = int(power[0])
+        print(' %s power is %s' % (las, power[0]))
+
     for z_slice in range(0, loop_range):
         count = 0
+        channel = 0
         for las, power in laser_dict.items():
             print("laser: {}".format(las))
-            print("power: {}".format(power))
-            lasers[las].enable()
-            print('%s is now enabled' % las)
-
-            lasers[las].laser_power = int(power)
-            print(' %s power is %s' % (las, power))
-
+            print("power: {}".format(power[0]))
+            print("channel: {}".format(channel))
             lasers[las].emission_on()
             logger.debug('%s now emitting' % las)
+            basler_detector.camera.Open()
+            basler_detector.camera.ExposureTime.SetValue(int(power[1]))
+            print("Exposure time set as: {}".format(power[1]))
 
-            if las == 'laser561':
-                basler_detector.camera.ExposureTime.SetValue(exposure_time)
-                logger.debug('Exposure time is: {}'.format(
+            logger.debug('Exposure time is: {}'.format(
                     basler_detector.camera.ExposureTime.GetValue()))
-            else:
-                basler_detector.camera.ExposureTime.SetValue(exposure_time)
-                message = 'Exposure time is: {}'.format(
-                    basler_detector.camera.ExposureTime.GetValue())
-                logger.debug(message)
-                main_gui.current_image = basler_detector.camera_grab()
-            main_gui.array_list = main_gui.current_image
+
+            volume[z_slice, :, :, channel] = z_slice*int(power[0])*np.random.rand(1040,1024)#basler_detector.camera_grab()
 
             lasers[las].emission_off()
             time.sleep(1)
             logger.debug('%s stopped emitting' % las)
-
-            main_gui.string_list = ['Volume_image_' + str(z_slice+1)
-                                + '_of_' + str(loop_range) + las]
-            main_gui.update_display()
-
-            main_gui.save_image()
-
-            lasers[las].disable()
-            print('%s now disabled' % las)
 
             target_position = float(total_volume_height/2.) \
                               + float(initial_position) \
@@ -96,18 +88,22 @@ def volume_acquisition(main_gui, exposure_time, laser_dict, no_z_slices,
             difference = position - target_position
             logger.debug('Difference is: %s' % str(difference))
 
-        while count < count_max and \
-            (difference > threshold or difference < -threshold):
+            while count < count_max and difference > threshold or \
+                    difference < -threshold:
 
-            stage_controller.move_relative(-int(difference))
+                stage_controller.move_relative(-int(difference))
 
-            position = float(get_position(stage_controller))
-            difference = position - target_position
-            logger.debug('Difference is: %s' % str(difference))
+                position = float(get_position(stage_controller))
+                difference = position - target_position
+                logger.debug('Difference is: %s' % str(difference))
 
-            count = count + 1
+                count = count + 1
+
+            channel = channel + 1
 
     stage_controller.move_relative(int(total_volume_height/2))
+
+    return volume
 
 
 def get_position(stage):
