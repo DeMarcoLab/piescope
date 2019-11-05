@@ -1,6 +1,7 @@
 import logging
 import time
 import numpy as np
+import piescope.utils as util
 
 from piescope.lm import objective, laser, detector
 
@@ -13,7 +14,7 @@ count_max = 5
 threshold = 5
 
 
-def volume_acquisition(laser_dict, no_z_slices, z_slice_distance):
+def volume_acquisition(laser_dict, no_z_slices, z_slice_distance, destination):
 
     total_volume_height = (int(no_z_slices)-1)*int(z_slice_distance)
     logger.debug('Total height is: %s' % str(total_volume_height) + '\n')
@@ -30,7 +31,7 @@ def volume_acquisition(laser_dict, no_z_slices, z_slice_distance):
     sizing_image = basler_detector.camera_grab()
     sizing_shape = np.shape(sizing_image)
 
-    volume = np.ndarray(shape=(no_z_slices, sizing_shape[0], sizing_shape[1], len(laser_dict)), dtype=np.int8)
+    volume = np.ndarray(shape=(no_z_slices, sizing_shape[0], sizing_shape[1], len(laser_dict)), dtype=np.uint8)
 
     initial_position = str(get_position(stage_controller))
     logger.debug("Initial position is: %s \n" % initial_position)
@@ -60,14 +61,14 @@ def volume_acquisition(laser_dict, no_z_slices, z_slice_distance):
             lasers[las].emission_on()
             logger.debug('%s now emitting' % las)
             basler_detector.camera.Open()
-            basler_detector.camera.ExposureTime.SetValue(int(power[1]))
+            basler_detector.camera.ExposureTime.SetValue(int(float(power[1])*1000))
             print("Exposure time set as: {}".format(power[1]))
 
             logger.debug('Exposure time is: {}'.format(
                     basler_detector.camera.ExposureTime.GetValue()))
 
-            volume[z_slice, :, :, channel] = z_slice*int(power[0])*np.random.rand(1040,1024)#basler_detector.camera_grab()
-
+            volume[z_slice, :, :, channel] = basler_detector.camera_grab()
+            # util.save_image(v olume[z_slice, :, :, channel], destination + str(las) + "_" + str(z_slice) + ".tiff")
             lasers[las].emission_off()
             time.sleep(1)
             logger.debug('%s stopped emitting' % las)
