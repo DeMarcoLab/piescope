@@ -1,11 +1,15 @@
 import numpy as np
+from autoscript_sdb_microscope_client.structures import (
+    GrabFrameSettings,
+    Rectangle,
+    RunAutoCbSettings,
+)
 """Module for interacting with the FIBSEM using Autoscript."""
 
 
 def initialize(ip_address='10.0.0.1'):
     """Initialize connection to FIBSEM microscope with Autoscript."""
     from autoscript_sdb_microscope_client import SdbMicroscopeClient
-
     microscope = SdbMicroscopeClient()
     microscope.connect(ip_address)
     return microscope
@@ -195,6 +199,27 @@ def pixel_to_realspace_coordinate(coord, image):
     coord -= np.array([x_shape / 2, y_shape / 2]).astype(np.int32)
     realspace_coord = list(np.array(coord) * pixelsize_x)  # to real space
     return realspace_coord
+
+
+def autocontrast(microscope):
+    """Atuomatically adjust the microscope image contrast.
+        Parameters
+        ----------
+        microscope : Autoscript microscope object.
+        Returns
+        -------
+        RunAutoCbSettings
+            Automatic contrast brightness settings.
+        """
+    microscope.imaging.set_active_view(2)
+    autocontrast_settings = RunAutoCbSettings(
+        method="MaxContrast",
+        resolution="768x512",  # low resolution, so as not to damage the sample
+        number_of_frames=5,
+    )
+    # logging.info("Automatically adjusting contrast...")
+    microscope.auto_functions.run_auto_cb()
+    return autocontrast_settings
 
 
 def test_numpy():
