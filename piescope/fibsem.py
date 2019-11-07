@@ -1,3 +1,4 @@
+import numpy as np
 """Module for interacting with the FIBSEM using Autoscript."""
 
 
@@ -153,3 +154,48 @@ def last_electron_image(microscope):
     microscope.imaging.set_active_view(1)  # the electron beam view
     image = microscope.imaging.get_image()
     return image
+
+
+def create_rectangular_pattern(microscope, image, x0, x1, y0, y1, depth=1e-6):
+    pixelsize_x = image.metadata.binary_result.pixel_size.x
+    pixelsize_y = image.metadata.binary_result.pixel_size.y
+    image_shape_y, image_shape_x = image.data.shape
+    width = (x1-x0) * pixelsize_x #  real space (meters)
+    height = (y1-y0) * pixelsize_y # real space (meters)
+
+    center_x_pixels = (x0 + ((x1-x0)/2))
+    center_y_pixels = (y0 + ((y1-y0)/2))
+
+    center_x_realspace, center_y_realspace = pixel_to_realspace_coordinate([center_x_pixels, center_y_pixels], image)
+    microscope.patterning.create_rectangle(center_x_realspace, center_y_realspace, width, height, depth)
+
+
+def pixel_to_realspace_coordinate(coord, image):
+    """Covert pixel image coordinate to real space coordinate.
+    This conversion deliberately ignores the nominal pixel size in y,
+    as this can lead to inaccuraccies if the sample is not flat in y.
+    Parameters
+    ----------
+    coord : listlike, float
+        In x, y format & pixel units. Origin is at the top left.
+    image : AdorrnedImage
+        Image the coordinate came from.
+    Returns
+    -------
+    realspace_coord
+        xy coordinate in real space. Origin is at the image center.
+        Output is in (x, y) format.
+    """
+    coord = np.array(coord).astype(np.float64)
+    y_shape, x_shape = image.data.shape
+    pixelsize_x = image.metadata.binary_result.pixel_size.x
+    # deliberately don't use the y pixel size, any tilt will throw this off
+    coord[1] = y_shape - coord[1]  # flip y-axis for relative coordinate system
+    # reset origin to center
+    coord -= np.array([x_shape / 2, y_shape / 2]).astype(np.int32)
+    realspace_coord = list(np.array(coord) * pixelsize_x)  # to real space
+    return realspace_coord
+
+
+def test_numpy():
+    return np.random.random((100,200))
