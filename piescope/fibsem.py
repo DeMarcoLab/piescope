@@ -76,7 +76,7 @@ def move_to_electron_microscope(microscope, x=-50.0e-3, y=0.0):
     return microscope.specimen.stage.current_position
 
 
-def new_ion_image(microscope):
+def new_ion_image(microscope, settings):
     """Take new ion beam image.
 
     Uses whichever camera settings (resolution, dwell time, etc) are current.
@@ -94,11 +94,11 @@ def new_ion_image(microscope):
         image.metadata.binary_result.pixel_size.y = image pixel size in y
     """
     microscope.imaging.set_active_view(2)  # the ion beam view
-    image = microscope.imaging.grab_frame()
+    image = microscope.imaging.grab_frame(settings)
     return image
 
 
-def new_electron_image(microscope):
+def new_electron_image(microscope, settings):
     """Take new electron beam image.
 
     Uses whichever camera settings (resolution, dwell time, etc) are current.
@@ -116,7 +116,7 @@ def new_electron_image(microscope):
         image.metadata.binary_result.pixel_size.y = image pixel size in y
     """
     microscope.imaging.set_active_view(1)  # the electron beam view
-    image = microscope.imaging.grab_frame()
+    image = microscope.imaging.grab_frame(settings)
     return image
 
 
@@ -161,9 +161,13 @@ def last_electron_image(microscope):
 
 
 def create_rectangular_pattern(microscope, image, x0, x1, y0, y1, depth=1e-6):
+    if x0 is None or x1 is None or y0 is None or y1 is None:
+        print("No rectangle selected")
+        return
+    microscope.patterning.clear_patterns()
     pixelsize_x = image.metadata.binary_result.pixel_size.x
     pixelsize_y = image.metadata.binary_result.pixel_size.y
-    image_shape_y, image_shape_x = image.data.shape
+
     width = (x1-x0) * pixelsize_x #  real space (meters)
     height = (y1-y0) * pixelsize_y # real space (meters)
 
@@ -191,7 +195,11 @@ def pixel_to_realspace_coordinate(coord, image):
         Output is in (x, y) format.
     """
     coord = np.array(coord).astype(np.float64)
-    y_shape, x_shape = image.data.shape
+    if len(image.data.shape) > 2:
+        y_shape, x_shape = image.data.shape[0:2]
+    else:
+        y_shape, x_shape = image.data.shape
+
     pixelsize_x = image.metadata.binary_result.pixel_size.x
     # deliberately don't use the y pixel size, any tilt will throw this off
     coord[1] = y_shape - coord[1]  # flip y-axis for relative coordinate system
@@ -202,7 +210,7 @@ def pixel_to_realspace_coordinate(coord, image):
 
 
 def autocontrast(microscope):
-    """Atuomatically adjust the microscope image contrast.
+    """Automatically adjust the microscope image contrast.
         Parameters
         ----------
         microscope : Autoscript microscope object.
@@ -222,5 +230,13 @@ def autocontrast(microscope):
     return autocontrast_settings
 
 
+def update_camera_settings(cam_dwell_time, img_resolution):
+    cam_settings = GrabFrameSettings(
+        resolution=img_resolution,
+        dwell_time=cam_dwell_time
+    )
+    return cam_settings
+
+
 def test_numpy():
-    return np.random.random((100,200))
+    return np.random.random((100, 200))
