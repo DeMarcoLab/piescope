@@ -76,7 +76,7 @@ def move_to_electron_microscope(microscope, x=-50.0e-3, y=0.0):
     return microscope.specimen.stage.current_position
 
 
-def new_ion_image(microscope, settings):
+def new_ion_image(microscope, settings=None):
     """Take new ion beam image.
 
     Uses whichever camera settings (resolution, dwell time, etc) are current.
@@ -94,11 +94,14 @@ def new_ion_image(microscope, settings):
         image.metadata.binary_result.pixel_size.y = image pixel size in y
     """
     microscope.imaging.set_active_view(2)  # the ion beam view
-    image = microscope.imaging.grab_frame(settings)
+    if settings is not None:
+        image = microscope.imaging.grab_frame(settings)
+    else:
+        image = microscope.imaging.grab_frame()
     return image
 
 
-def new_electron_image(microscope, settings):
+def new_electron_image(microscope, settings=None):
     """Take new electron beam image.
 
     Uses whichever camera settings (resolution, dwell time, etc) are current.
@@ -116,7 +119,10 @@ def new_electron_image(microscope, settings):
         image.metadata.binary_result.pixel_size.y = image pixel size in y
     """
     microscope.imaging.set_active_view(1)  # the electron beam view
-    image = microscope.imaging.grab_frame(settings)
+    if settings is not None:
+        image = microscope.imaging.grab_frame(settings)
+    else:
+        image = microscope.imaging.grab_frame()
     return image
 
 
