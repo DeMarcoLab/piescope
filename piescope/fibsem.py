@@ -1,10 +1,15 @@
+import numpy as np
+from autoscript_sdb_microscope_client.structures import (
+    GrabFrameSettings,
+    Rectangle,
+    RunAutoCbSettings,
+)
 """Module for interacting with the FIBSEM using Autoscript."""
 
 
 def initialize(ip_address='10.0.0.1'):
     """Initialize connection to FIBSEM microscope with Autoscript."""
     from autoscript_sdb_microscope_client import SdbMicroscopeClient
-
     microscope = SdbMicroscopeClient()
     microscope.connect(ip_address)
     return microscope
@@ -71,7 +76,7 @@ def move_to_electron_microscope(microscope, x=-50.0e-3, y=0.0):
     return microscope.specimen.stage.current_position
 
 
-def new_ion_image(microscope):
+def new_ion_image(microscope, settings=None):
     """Take new ion beam image.
 
     Uses whichever camera settings (resolution, dwell time, etc) are current.
@@ -89,11 +94,14 @@ def new_ion_image(microscope):
         image.metadata.binary_result.pixel_size.y = image pixel size in y
     """
     microscope.imaging.set_active_view(2)  # the ion beam view
-    image = microscope.imaging.grab_frame()
+    if settings is not None:
+        image = microscope.imaging.grab_frame(settings)
+    else:
+        image = microscope.imaging.grab_frame()
     return image
 
 
-def new_electron_image(microscope):
+def new_electron_image(microscope, settings=None):
     """Take new electron beam image.
 
     Uses whichever camera settings (resolution, dwell time, etc) are current.
@@ -111,7 +119,10 @@ def new_electron_image(microscope):
         image.metadata.binary_result.pixel_size.y = image pixel size in y
     """
     microscope.imaging.set_active_view(1)  # the electron beam view
-    image = microscope.imaging.grab_frame()
+    if settings is not None:
+        image = microscope.imaging.grab_frame(settings)
+    else:
+        image = microscope.imaging.grab_frame()
     return image
 
 
@@ -153,3 +164,85 @@ def last_electron_image(microscope):
     microscope.imaging.set_active_view(1)  # the electron beam view
     image = microscope.imaging.get_image()
     return image
+
+
+def create_rectangular_pattern(microscope, image, x0, x1, y0, y1, depth=1e-6):
+    if x0 is None or x1 is None or y0 is None or y1 is None:
+        print("No rectangle selected")
+        return
+    microscope.patterning.clear_patterns()
+    pixelsize_x = image.metadata.binary_result.pixel_size.x
+    pixelsize_y = image.metadata.binary_result.pixel_size.y
+
+    width = (x1-x0) * pixelsize_x #  real space (meters)
+    height = (y1-y0) * pixelsize_y # real space (meters)
+
+    center_x_pixels = (x0 + ((x1-x0)/2))
+    center_y_pixels = (y0 + ((y1-y0)/2))
+
+    center_x_realspace, center_y_realspace = pixel_to_realspace_coordinate([center_x_pixels, center_y_pixels], image)
+    microscope.patterning.create_rectangle(center_x_realspace, center_y_realspace, width, height, depth)
+
+
+def pixel_to_realspace_coordinate(coord, image):
+    """Covert pixel image coordinate to real space coordinate.
+    This conversion deliberately ignores the nominal pixel size in y,
+    as this can lead to inaccuraccies if the sample is not flat in y.
+    Parameters
+    ----------
+    coord : listlike, float
+        In x, y format & pixel units. Origin is at the top left.
+    image : AdorrnedImage
+        Image the coordinate came from.
+    Returns
+    -------
+    realspace_coord
+        xy coordinate in real space. Origin is at the image center.
+        Output is in (x, y) format.
+    """
+    coord = np.array(coord).astype(np.float64)
+    if len(image.data.shape) > 2:
+        y_shape, x_shape = image.data.shape[0:2]
+    else:
+        y_shape, x_shape = image.data.shape
+
+    pixelsize_x = image.metadata.binary_result.pixel_size.x
+    # deliberately don't use the y pixel size, any tilt will throw this off
+    coord[1] = y_shape - coord[1]  # flip y-axis for relative coordinate system
+    # reset origin to center
+    coord -= np.array([x_shape / 2, y_shape / 2]).astype(np.int32)
+    realspace_coord = list(np.array(coord) * pixelsize_x)  # to real space
+    return realspace_coord
+
+
+def autocontrast(microscope):
+    """Automatically adjust the microscope image contrast.
+        Parameters
+        ----------
+        microscope : Autoscript microscope object.
+        Returns
+        -------
+        RunAutoCbSettings
+            Automatic contrast brightness settings.
+        """
+    microscope.imaging.set_active_view(2)
+    autocontrast_settings = RunAutoCbSettings(
+        method="MaxContrast",
+        resolution="768x512",  # low resolution, so as not to damage the sample
+        number_of_frames=5,
+    )
+    # logging.info("Automatically adjusting contrast...")
+    microscope.auto_functions.run_auto_cb()
+    return autocontrast_settings
+
+
+def update_camera_settings(cam_dwell_time, img_resolution):
+    cam_settings = GrabFrameSettings(
+        resolution=img_resolution,
+        dwell_time=cam_dwell_time
+    )
+    return cam_settings
+
+
+def test_numpy():
+    return np.random.random((100, 200))
