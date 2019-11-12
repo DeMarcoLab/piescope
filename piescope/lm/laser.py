@@ -85,10 +85,10 @@ class Laser():
         name : str
             Laser name string for serial communication.
             Available options:
-            * "laser1" with wavelength 640nm (far-red)
-            * "laser2" with wavelength 561nm (RFP)
-            * "laser3" with wavelength 488nm (GFP)
-            * "laser4" with wavelength 405nm (DAPI)
+            * "laser640" with wavelength 640nm (far-red)
+            * "laser561" with wavelength 561nm (RFP)
+            * "laser488" with wavelength 488nm (GFP)
+            * "laser405" with wavelength 405nm (DAPI)
         serial_port : pyserial Serial() object
             Serial communication port for the laser.
         laser_power : float, optional

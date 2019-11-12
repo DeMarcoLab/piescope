@@ -15,7 +15,27 @@ threshold = 5
 
 
 def volume_acquisition(laser_dict, no_z_slices, z_slice_distance, destination):
+    """
+    Parameters
+    ----------
+    laser_dict : dict
+    dictionary with structure: {"name": (power, exposure)} with types
+    {str: (int, int)}
 
+    no_z_slices : int
+    amount of slices to take for volume
+
+    z_slice_distance : int
+    distance in nm between each z slice
+
+    destination : str
+    path to save location for images taken during volume acquisition
+
+    Returns
+    ----------
+    volume : multidimensional numpy array
+    numpy.ndarray with shape (slices, cols, rows, channels)
+    """
     total_volume_height = (int(no_z_slices)-1)*int(z_slice_distance)
     logger.debug('Total height is: %s' % str(total_volume_height) + '\n')
     logger.debug('Number of slices is: %s' % no_z_slices + '\n')
@@ -68,7 +88,7 @@ def volume_acquisition(laser_dict, no_z_slices, z_slice_distance, destination):
                     basler_detector.camera.ExposureTime.GetValue()))
 
             volume[z_slice, :, :, channel] = basler_detector.camera_grab()
-            # util.save_image(v olume[z_slice, :, :, channel], destination + str(las) + "_" + str(z_slice) + ".tiff")
+            # util.save_image(volume[z_slice, :, :, channel], destination + str(las) + "_" + str(z_slice) + ".tiff")
             lasers[las].emission_off()
             time.sleep(1)
             logger.debug('%s stopped emitting' % las)
@@ -108,6 +128,17 @@ def volume_acquisition(laser_dict, no_z_slices, z_slice_distance, destination):
 
 
 def get_position(stage):
+    """
+    Parameters
+    ----------
+    stage : StageController
+    The stage for which you are getting the position
+
+    Returns
+    ----------
+    postion : str
+    Curent position as str
+    """
     time.sleep(time_delay)
     position = stage.current_position()
     return position

@@ -167,6 +167,24 @@ def last_electron_image(microscope):
 
 
 def create_rectangular_pattern(microscope, image, x0, x1, y0, y1, depth=1e-6):
+    """Create a rectangular pattern that is sent to the FIBSEM controller
+    Parameters
+    ----------
+    microscope : Microscope class.
+        Connection to Autoscript client
+    image : Adorned Image
+        The image to draw rectangle on
+    x0 : float
+        X co-ord of top left corner of rectangle
+    x1 : float
+        X co-ord of bottom right corner of rectangle
+    y0 : float
+        Y co-ord of top left corner of rectangle
+    y1 : float
+        Y co-ord of bottom right corner of rectangle
+    depth : float
+        How deep to mill
+    """
     if x0 is None or x1 is None or y0 is None or y1 is None:
         print("No rectangle selected")
         return
@@ -192,7 +210,7 @@ def pixel_to_realspace_coordinate(coord, image):
     ----------
     coord : listlike, float
         In x, y format & pixel units. Origin is at the top left.
-    image : AdorrnedImage
+    image : AdornedImage
         Image the coordinate came from.
     Returns
     -------
