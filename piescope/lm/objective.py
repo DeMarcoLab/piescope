@@ -46,7 +46,6 @@ class StageController(socket):
         start_position : int
         set what value in nm to have the reference mark represent
         """
-
         try:
             logger.debug('Initialising parameters.')
             self.set_relative_accumulation(relative_accumulation)
