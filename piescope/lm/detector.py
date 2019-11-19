@@ -15,7 +15,8 @@ class Basler():
         self.image = []
 
     def camera_grab(self):
-        """Grab an image from the Basler detector
+        """Grab a new image from the Basler detector.
+
         Returns:
         ----------
         self.image : numpy array

@@ -7,34 +7,47 @@ from piescope.lm import objective, laser, detector
 
 logger = logging.getLogger(__name__)
 
-# Assume minimum 0.5 microns per step maximum 300 microns total height
 
-time_delay = 1
-count_max = 5
-threshold = 5
+def volume_acquisition(laser_dict, no_z_slices, z_slice_distance, destination,
+                       time_delay=1, count_max=5, threshold=5):
+    """Acquire an image volume using the fluorescence microscope.
 
-
-def volume_acquisition(laser_dict, no_z_slices, z_slice_distance, destination):
-    """
     Parameters
     ----------
     laser_dict : dict
-    dictionary with structure: {"name": (power, exposure)} with types
-    {str: (int, int)}
+        Dictionary with structure: {"name": (power, exposure)} with types
+        {str: (int, int)}
 
     no_z_slices : int
-    amount of slices to take for volume
+        Amount of slices to take for total volume
 
     z_slice_distance : int
-    distance in nm between each z slice
+        Distance in nm between each z slice
 
     destination : str
-    path to save location for images taken during volume acquisition
+        Path to save location for images taken during volume acquisition
+
+    time_delay : int, optional
+        Pause after moving to the top of the imaging volume, by default 1
+
+    count_max : int, optional
+        Maximum number of attempts to move the stage to its target position.
+        By default 5
+
+    threshold : int, optional
+        Threshold cutoff for deciding whether the current stage position
+        is close enough to the target position.
+        By default 5
 
     Returns
-    ----------
+    -------
     volume : multidimensional numpy array
-    numpy.ndarray with shape (slices, cols, rows, channels)
+        numpy.ndarray with shape (slices, cols, rows, channels)
+
+    Notes
+    -----
+    It's good to assume a minimum of 0.5 microns per step,
+    and a maximum 300 microns total height for the volume acquisition.
     """
     total_volume_height = (int(no_z_slices)-1)*int(z_slice_distance)
     logger.debug('Total height is: %s' % str(total_volume_height) + '\n')
@@ -127,17 +140,20 @@ def volume_acquisition(laser_dict, no_z_slices, z_slice_distance, destination):
     return volume
 
 
-def get_position(stage):
-    """
+def get_position(stage, time_delay=1):
+    """Return the position of the fluorescence objective lens stage.
+
     Parameters
     ----------
     stage : StageController
-    The stage for which you are getting the position
+        The stage for which you are getting the position
+    time_delay : int, optional
+        Pause before querying the objective stage position, by default 1
 
     Returns
     ----------
     postion : str
-    Curent position as str
+        Curent position as str
     """
     time.sleep(time_delay)
     position = stage.current_position()
