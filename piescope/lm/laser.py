@@ -12,10 +12,10 @@ import serial.tools.list_ports
 DEFAULT_SERIAL_PORT = 'COM3'  # default laser serial communication port
 _available_serial_ports = serial.tools.list_ports.comports()
 _available_port_names = [port.device for port in _available_serial_ports]
-_available_lasers = (("laser640", "laser1", 640), # (far-red)
-                     ("laser561", "laser2", 561), # (RFP)
-                     ("laser488", "laser3", 488), # (GFP)
-                     ("laser405", "laser4", 405)) # (DAPI)
+_available_lasers = (("laser640", "laser1", 640),  # (far-red)
+                     ("laser561", "laser2", 561),  # (RFP)
+                     ("laser488", "laser3", 488),  # (GFP)
+                     ("laser405", "laser4", 405))  # (DAPI)
 _laser_name_to_wavelength = {i[0]: i[2] for i in _available_lasers}
 _laser_wavelength_to_name = {i[2]: i[0] for i in _available_lasers}
 _laser_wavelength_to_id = {i[2]: i[1] for i in _available_lasers}
