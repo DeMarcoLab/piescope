@@ -9,18 +9,42 @@ logger = logging.getLogger(__name__)
 
 
 class StageController(socket):
-    """Class for connecting to the objective stage controller"""
-    def __init__(self, host='169.254.111.111', port=139, timeout=5.0, testing=False):
+    """Class for connecting to the SMARACT objective stage controller."""
+    def __init__(self, host='169.254.111.111', port=139, timeout=5.0,
+                 testing=False):
+        """Create a new StageController instance, for SMARACT objective stage.
+
+        Parameters
+        ----------
+        socket : socket object
+            Socket object that the StageController class inherits from.
+        host : str, optional
+            IP address for SMARACT fluorescence objective lens stage.
+            By default, '169.254.111.111'
+        port : int, optional
+            Port number for socket connection to SMARACT objective lens stage.
+            Default port number is 139
+        timeout : float, optional
+            Time in seconds before connection times out, by default 5.0 seconds
+        testing : bool, optional
+            For offline testing only, by default False.
+
+        Raises
+        ------
+        RuntimeError
+            Error raised if socket connection to SMARACT ojbective lens stage
+            cannot be established.
+        """
         super().__init__(family=AF_INET, type=SOCK_STREAM)
         self.settimeout(timeout)
         if not testing:
             try:
                 self.connect((host, port))
-                print('Successfully connected to Smaract')
+                print('Successfully connected to SMARACT objective lens stage')
             except Exception as e:
-                logger.error("Stage error: " + str(e))
-                raise RuntimeError('Cannot connect to Smaract. '
-                                   'Error: %s', e)
+                logger.error("SMARACT objective stage error: " + str(e))
+                raise RuntimeError('Cannot connect to SMARACT stage! '
+                                   'Error: {}'.format(e))
 
     def initialise_system_parameters(self, relative_accumulation=0,
                                      reference_mark=0, reference_hold=1000,
@@ -56,6 +80,7 @@ class StageController(socket):
         except Exception as e:
             logger.error(e)
             logger.error("Error in initialising stage parameters")
+            raise e
 
     def set_relative_accumulation(self, onoff):
         """Set the relative accumulation for the objective lens stage.
@@ -68,18 +93,23 @@ class StageController(socket):
             0 for disable, 1 for enable.
 
         Returns
-        ----------
+        -------
         ans : string
             Return string from the stage controller.
             Gives information about whether or not call succeeded.
         """
+        if str(onoff) not in set(["0", "1"]):
+            raise ValueError("Input argument to set_relative_accumulation() "
+                             "in piescope.lm.objective module "
+                             "must be equal to either 0 or 1.")
         try:
             cmd = 'SARP0,' + str(onoff)
             ans = self.send_command(cmd)
             return ans
         except Exception as e:
             logger.error(e)
-            logger.error("Unable to set relative accumulation")
+            logger.error("Unable to set relative accumulation.")
+            raise e
 
     def find_reference_mark(self, mark, hold=1000):
         """Find reference mark position for fluorescence objective lens stage.
@@ -102,10 +132,12 @@ class StageController(socket):
         try:
             cmd = 'FRM0,' + str(mark) + ',' + str(hold) + ',1'
             ans = self.send_command(cmd)
-            return ans
         except Exception as e:
             logger.error(e)
-            logger.error("Unable to find reference mark")
+            logger.error("Unable to find reference mark.")
+            raise e
+        else:
+            return ans
 
     def set_start_position(self, start_position):
         """Set starting position for the fluorescence objective lens stage.
@@ -116,7 +148,7 @@ class StageController(socket):
             Set what value in nm to have the reference mark represent.
 
         Returns
-        ----------
+        -------
         ans : string
             Return string from the stage controller.
             Gives information about whether or not call succeeded.
@@ -124,10 +156,12 @@ class StageController(socket):
         try:
             cmd = 'SP0,' + str(start_position)
             ans = self.send_command(cmd)
-            return ans
         except Exception as e:
             logger.error(e)
-            logger.error("Unable to set start position")
+            logger.error("Unable to set start position.")
+            raise e
+        else:
+            return ans
 
     def move_absolute(self, position, hold=0):
         """Absolute movement of the fluorescence objective lens stage.
@@ -141,7 +175,7 @@ class StageController(socket):
             Time in ms to keep power high after moving to absolute position.
 
         Returns
-        ----------
+        -------
         ans : string
             Return string from the stage controller.
             Gives information about whether or not call succeeded.
@@ -149,13 +183,12 @@ class StageController(socket):
         try:
             cmd = 'MPA0,' + str(position) + ',' + str(hold)
             ans = self.send_command(cmd)
-            return ans
         except Exception as e:
             logger.error(e)
-            logger.error("Unable to move the stage")
+            logger.error("Unable to move the stage.")
+            raise e
         else:
             return ans
-
 
     def move_relative(self, distance, hold=0):
         """Relative movement of the fluorescence objective lens stage.
@@ -169,7 +202,7 @@ class StageController(socket):
             Time in ms to keep power high after moving to relative position.
 
         Returns
-        ----------
+        -------
         ans : string
             Return string from the stage controller.
             Gives information about whether or not call succeeded.
@@ -177,27 +210,31 @@ class StageController(socket):
         try:
             cmd = 'MPR0,' + str(distance) + ',' + str(hold)
             ans = self.send_command(cmd)
-            return ans
         except Exception as e:
             logger.error(e)
-            logger.error("Unable to move the stage")
+            logger.error("Unable to move the stage.")
+            raise e
+        else:
+            return ans
 
     def current_position(self):
         """Current position of the fluorescence objective lens stage.
 
         Returns
-        ----------
+        -------
         position : string
             Current position of objective stage controller as a string.
         """
         try:
             cmd = 'GP0'
             ans = self.send_command(cmd)
-            position = str(ans).rsplit(',')[-1].split('\\')[0]
-            return position
         except Exception as e:
             logger.error(e)
             logger.error("Unable to fetch objective stage position.")
+            raise e
+        else:
+            position = str(ans).rsplit(',')[-1].split('\\')[0]
+            return position
 
     def send_command(self, cmd, pre_string=':', post_string='\012'):
         """Send command to the fluorescence objective lens stage.
@@ -216,6 +253,10 @@ class StageController(socket):
         self.recv(1024)
             Return string from the stage controller.
             Gives information about whether or not call succeeded.
+
+        Raises
+        ------
+        Raises an exception if unable to send the command through the socket.
         """
         cmd = bytes(pre_string + cmd + post_string, 'utf-8')
         try:
@@ -224,6 +265,6 @@ class StageController(socket):
             logger.error(e)
             logger.error("Unable to send command to controller: "
                          "{}".format(cmd))
-            raise Exception(e)
+            raise e
         else:
             return self.recv(1024)
