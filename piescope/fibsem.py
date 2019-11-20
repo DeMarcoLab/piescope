@@ -167,6 +167,35 @@ def last_electron_image(microscope):
 
 
 def create_rectangular_pattern(microscope, image, x0, x1, y0, y1, depth=1e-6):
+    """Create a rectangular pattern that is sent to the FIBSEM controller.
+
+    Parameters
+    ----------
+    microscope : Microscope class.
+        Connection to Autoscript client
+    image : Adorned Image
+        The image to draw rectangle on
+    x0 : float
+        X co-ord of top left corner of rectangle
+        Pixel coordinates, origin at top left corner.
+    x1 : float
+        X co-ord of bottom right corner of rectangle
+        Pixel coordinates, origin at top left corner.
+    y0 : float
+        Y co-ord of top left corner of rectangle
+        Pixel coordinates, origin at top left corner.
+    y1 : float
+        Y co-ord of bottom right corner of rectangle
+        Pixel coordinates, origin at top left corner.
+    depth : float
+        How deep to mill the ion beam pattern.
+        Realspace units, in meters. Default is 1e-6 == 1 micron depth.
+
+    Returns
+    -------
+    rectangle_milling_pattern
+        Autoscript rectangle milling pattern. RectanglePattern class object.
+    """
     if x0 is None or x1 is None or y0 is None or y1 is None:
         print("No rectangle selected")
         return
@@ -174,26 +203,33 @@ def create_rectangular_pattern(microscope, image, x0, x1, y0, y1, depth=1e-6):
     pixelsize_x = image.metadata.binary_result.pixel_size.x
     pixelsize_y = image.metadata.binary_result.pixel_size.y
 
-    width = (x1-x0) * pixelsize_x #  real space (meters)
-    height = (y1-y0) * pixelsize_y # real space (meters)
+    width = (x1-x0) * pixelsize_x   # real space (meters)
+    height = (y1-y0) * pixelsize_y  # real space (meters)
 
     center_x_pixels = (x0 + ((x1-x0)/2))
     center_y_pixels = (y0 + ((y1-y0)/2))
 
-    center_x_realspace, center_y_realspace = pixel_to_realspace_coordinate([center_x_pixels, center_y_pixels], image)
-    microscope.patterning.create_rectangle(center_x_realspace, center_y_realspace, width, height, depth)
+    center_x_realspace, center_y_realspace = pixel_to_realspace_coordinate(
+        [center_x_pixels, center_y_pixels], image)
+    rectangle_milling_pattern = microscope.patterning.create_rectangle(
+        center_x_realspace, center_y_realspace, width, height, depth)
+    return rectangle_milling_pattern
 
 
 def pixel_to_realspace_coordinate(coord, image):
     """Covert pixel image coordinate to real space coordinate.
+
     This conversion deliberately ignores the nominal pixel size in y,
     as this can lead to inaccuraccies if the sample is not flat in y.
+
     Parameters
     ----------
     coord : listlike, float
         In x, y format & pixel units. Origin is at the top left.
-    image : AdorrnedImage
+
+    image : AdornedImage
         Image the coordinate came from.
+
     Returns
     -------
     realspace_coord
@@ -217,14 +253,16 @@ def pixel_to_realspace_coordinate(coord, image):
 
 def autocontrast(microscope):
     """Automatically adjust the microscope image contrast.
-        Parameters
-        ----------
-        microscope : Autoscript microscope object.
-        Returns
-        -------
-        RunAutoCbSettings
-            Automatic contrast brightness settings.
-        """
+
+    Parameters
+    ----------
+    microscope : Autoscript microscope object.
+
+    Returns
+    -------
+    RunAutoCbSettings
+        Automatic contrast brightness settings.
+    """
     microscope.imaging.set_active_view(2)
     autocontrast_settings = RunAutoCbSettings(
         method="MaxContrast",
@@ -236,13 +274,30 @@ def autocontrast(microscope):
     return autocontrast_settings
 
 
-def update_camera_settings(cam_dwell_time, img_resolution):
-    cam_settings = GrabFrameSettings(
-        resolution=img_resolution,
-        dwell_time=cam_dwell_time
+def update_camera_settings(camera_dwell_time, image_resolution):
+    """Create new FIBSEM camera settings using Austoscript GrabFrameSettings.
+
+    Parameters
+    ----------
+    camera_dwell_time : float
+        Image acquisition dwell time in seconds.
+    image_resolution : str
+        String describing image resolution. Format is pixel width by height.
+        Common values include:
+            "1536x1024"
+            "3072x2048"
+            "6144x4096"
+            "768x512"
+        The full list of available values may differ between instruments.
+        See microscope.beams.ion_beam.scanning.resolution.available_values
+
+    Returns
+    -------
+    camera_settings
+        AutoScript GrabFrameSettings object instance.
+    """
+    camera_settings = GrabFrameSettings(
+        resolution=image_resolution,
+        dwell_time=camera_dwell_time
     )
-    return cam_settings
-
-
-def test_numpy():
-    return np.random.random((100, 200))
+    return camera_settings
