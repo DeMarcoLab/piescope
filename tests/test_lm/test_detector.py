@@ -1,32 +1,28 @@
+import os
+
+import numpy as np
 import pytest
+from skimage import io
+
 pytest.importorskip('pypylon', reason="The pypylon library is not available.")
 
 
 @pytest.fixture
-def dummy_camera(monkeypatch):
-    from pypylon import pylon
-    monkeypatch.setenv("PYLON_CAMEMU", "1")  # os.environ["PYLON_CAMEMU"] = "1"
-    dummy_camera = pylon.InstantCamera(
-        pylon.TlFactory.GetInstance().CreateFirstDevice())
-    return dummy_camera
+def basler_detector(monkeypatch):
+    import piescope.lm.detector
+    monkeypatch.setenv("PYLON_CAMEMU", "1")
+    basler_detector = piescope.lm.detector.Basler()
+    return basler_detector
 
 
-def test_grab_frame(dummy_camera):
-    from pypylon import pylon
-    dummy_camera.StartGrabbingMax(1)
-    while dummy_camera.IsGrabbing():
-        grabResult = dummy_camera.RetrieveResult(
-            5000, pylon.TimeoutHandling_ThrowException)
-    assert grabResult.Width == 1024
-    assert grabResult.Height == 1040
+def test_camera_grab(basler_detector):
+    output = basler_detector.camera_grab()
+    assert output.shape == (1040, 1024)
 
 
-# def test_get_frame():
-#     from pypylon import pylon
-#     pass
-
-
-# TODO: non-blocking live imaging
-# def test_live_image():
-#     from pypylon import pylon
-#     pass
+def test_camera_grab_image(basler_detector):
+    output = basler_detector.camera_grab()
+    current_directory = os.path.abspath(os.path.dirname(__file__))
+    filename = os.path.join(current_directory, 'basler_emulated_image.png')
+    expected = io.imread(filename)
+    assert np.allclose(output, expected)

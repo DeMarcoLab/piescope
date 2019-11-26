@@ -1,4 +1,3 @@
-black
 pytest>=4.3.0
 pytest-cov
 pytest-mpl
