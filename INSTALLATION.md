@@ -24,13 +24,13 @@ control of compatible FEI microscope systems.
 This is a commercial product by Thermo Fisher FEI, please visit their website
 at https://fei.com for information on pricing and installation.
 
-We use Autoscript version 4.1.0
+We use Autoscript version 4.2.2
 
 The version numbers of the python packages autoscript installs were:
 * autoscript-core 5.1.0
-* autoscript-sdb-microscope-client 4.1.0
-* autoscript-sdb-microscope-client-tests 4.1.0
-* autoscript-toolkit 4.1.0
+* autoscript-sdb-microscope-client 4.2.2
+* autoscript-sdb-microscope-client-tests 4.2.2
+* autoscript-toolkit 4.2.2
 * thermoscientific-logging 5.1.0
 
 ### Installing the Pylon Software Suite and pypylon python library
@@ -45,17 +45,20 @@ Basler also provide a Python API for use with their detectors and the Pylon soft
 Instructions for downloading and installing the latest version can be found at:
 https://github.com/basler/pypylon
 
-## Install `autolamella`
-Download the latest `autolamella` release wheel from https://github.com/DeMarcoLab/autolamella/releases
+## Install `piescope`
+Download the latest `piescope` release wheel from https://github.com/DeMarcoLab/piescope/releases
 
 Pip install the wheel file (`.whl`) into your python environment.
 ```
-pip install $AUTOLAMELLA_WHEEL_FILENAME.whl
+pip install $PIESCOPE_WHEEL_FILENAME.whl
 ```
 
 ## Python package dependencies
 All the python package dependencies you need should be installed automatically,
-with the exception of Autoscript which requires a special license key.
+with the exceptions:
+ 1. Autoscript which is a commercial product and requires a special license key.
+ 2. The Basler `pypylon` python pacakge, made freely available at
+ https://github.com/basler/pypylon
 
 If you do encounter an issue with missing package dependencies,
 you can always try reinstalling them with:
