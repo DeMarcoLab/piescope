@@ -1,9 +1,5 @@
 import numpy as np
-from autoscript_sdb_microscope_client.structures import (
-    GrabFrameSettings,
-    Rectangle,
-    RunAutoCbSettings,
-)
+from autoscript_sdb_microscope_client.structures import *
 """Module for interacting with the FIBSEM using Autoscript."""
 
 
