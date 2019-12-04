@@ -29,7 +29,7 @@ class Basler():
         self.camera.Open()
         self.camera.ExposureMode.SetValue('Timed')
         if exposure_time is not None:
-            self.camera.ExposureTimeAbs.SetValue(exposure_time)
+            self.camera.ExposureTimeAbs.SetValue(float(exposure_time))
         self.camera.StartGrabbingMax(self.imageCount)
         self.image = []
 

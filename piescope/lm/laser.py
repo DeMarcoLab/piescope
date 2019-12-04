@@ -162,6 +162,7 @@ class Laser():
         ValueError
             Laser power percentage is limited to between 0 and 100.
         """
+        value = float(value)
         if 0 <= value <= 100:
             command = "(param-set! '" + self.ID + \
                 ":level " + str(round(value, 2)) + ")\r"
