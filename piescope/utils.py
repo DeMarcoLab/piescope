@@ -2,8 +2,6 @@ import numpy as np
 import skimage.color
 import skimage.io
 
-from autoscript_sdb_microscope_client.structures import AdornedImage
-
 
 def save_image(image, destination):
     """Save image to file.
@@ -16,10 +14,15 @@ def save_image(image, destination):
         Filename of saved image, with .tif extension.
         Only the .tif file format is reliably supported.
     """
-    if type(image) is AdornedImage:
-        image.save(destination)
-    else:
+    try:
+        from autoscript_sdb_microscope_client.structures import AdornedImage
+    except ImportError:
         skimage.io.imsave(destination, image)
+    else:
+        if type(image) is AdornedImage:
+            image.save(destination)
+        else:
+            skimage.io.imsave(destination, image)
 
 
 def max_intensity_projection(image, start_slice=0, end_slice=None):
@@ -83,7 +86,9 @@ def rgb_image(image):
         return rgb_image
     elif image.ndim == 3:
         if image.shape[-1] == 1:
-            rgb_image = skimage.color.gray2rgb(image[:, :])
+            rgb_image = np.zeros(shape=(image.shape[0], image.shape[1], 3),
+                                dtype=np.uint8)
+            rgb_image[:, :, 0] = image[:, :, 0]
             return rgb_image
         elif image.shape[-1] == 2:
             rgb_image = np.zeros(shape=(image.shape[0], image.shape[1], 3),

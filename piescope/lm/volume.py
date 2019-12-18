@@ -2,7 +2,10 @@ import logging
 import time
 import numpy as np
 
-import piescope
+import piescope.lm.detector
+import piescope.lm.laser
+import piescope.lm.objective
+
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +80,6 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance, destination,
             lasers[laser_name].emission_on()
             volume[z_slice, :, :, channel] = detector.camera_grab(exposure_time)
             lasers[laser_name].emission_off()
-
             # Move objective lens stage
             target_position = (float(original_center_position)
                                + float(total_volume_height / 2.)

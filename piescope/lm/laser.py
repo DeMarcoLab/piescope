@@ -77,7 +77,8 @@ def connect_serial_port(port=DEFAULT_SERIAL_PORT, baudrate=115200, timeout=1):
 class Laser():
     """Laser class."""
 
-    def __init__(self, name, serial_port, laser_power=0.):
+    def __init__(self, name, serial_port, laser_power=0.,
+                 exposure_time=0., selected=False):
         """Initialize instance of Laser class. Laser enabled by default.
 
         Parameters
@@ -93,12 +94,21 @@ class Laser():
             Serial communication port for the laser.
         laser_power : float, optional
             Laser power percentage, by default 1%.
+        exposure_time : float
+            Feature request from our users - sometimes they want the ability
+            to set different exposure times (as well as different laser powers)
+            for different wavelengths.
+        selected - bool
+            Whether the laser currently selected.
+            Eg: For use a volume acquisition later on, etc.
         """
         self.NAME = name
         self.ID = _laser_name_to_id[self.NAME]
         self.WAVELENGTH = _laser_name_to_wavelength[self.NAME]
         self.SERIAL_PORT = serial_port
         self.laser_power = laser_power
+        self.exposure_time = exposure_time
+        self.selected = selected
         self.enable()
 
     def emission_on(self):

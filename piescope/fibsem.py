@@ -1,5 +1,4 @@
 import numpy as np
-from autoscript_sdb_microscope_client.structures import *
 """Module for interacting with the FIBSEM using Autoscript."""
 
 
@@ -259,6 +258,7 @@ def autocontrast(microscope):
     RunAutoCbSettings
         Automatic contrast brightness settings.
     """
+    from autoscript_sdb_microscope_client.structures import RunAutoCbSettings
     microscope.imaging.set_active_view(2)
     autocontrast_settings = RunAutoCbSettings(
         method="MaxContrast",
@@ -292,6 +292,7 @@ def update_camera_settings(camera_dwell_time, image_resolution):
     camera_settings
         AutoScript GrabFrameSettings object instance.
     """
+    from autoscript_sdb_microscope_client.structures import GrabFrameSettings
     camera_settings = GrabFrameSettings(
         resolution=image_resolution,
         dwell_time=camera_dwell_time
