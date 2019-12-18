@@ -14,14 +14,22 @@ class Basler():
         self.currentImageIndex = 0
         self.image = []
 
-    def camera_grab(self):
+    def camera_grab(self, exposure_time=None):
         """Grab a new image from the Basler detector.
 
-        Returns:
+        Parameters
         ----------
+        exposure_time : int
+            Exposure time, in microseconds.
+
+        Returns
+        -------
         self.image : numpy array
         """
         self.camera.Open()
+        self.camera.ExposureMode.SetValue('Timed')
+        if exposure_time is not None:
+            self.camera.ExposureTimeAbs.SetValue(float(exposure_time))
         self.camera.StartGrabbingMax(self.imageCount)
         self.image = []
 
@@ -32,8 +40,9 @@ class Basler():
             if grabResult.GrabSucceeded():
                 self.image = grabResult.Array
             else:
-                print("Error: ", grabResult.ErrorCode,
-                      grabResult.ErrorDescription)
+                raise RuntimeError("Error: " + grabResult.ErrorCode + '\n' +
+                                   grabResult.ErrorDescription
+                                   )
             grabResult.Release()
         self.camera.Close()
 

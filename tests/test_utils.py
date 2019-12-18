@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import pytest
+import skimage.data
 import skimage.io
 import skimage.util
 
@@ -97,3 +98,42 @@ def test_max_intensity_projection_invalid(invalid_shape):
     invalid_image = np.random.random(invalid_shape)
     with pytest.raises(ValueError):
         piescope.utils.max_intensity_projection(invalid_image)
+
+
+@pytest.mark.parametrize("input_image", [
+    (np.random.random((10))),
+    (np.random.random((10, 10, 1, 1))),
+    (np.random.random((10, 10, 5, 5, 5))),
+])
+def test_rgb_image_invalid_dimensions(input_image):
+    with pytest.raises(ValueError):
+        piescope.utils.rgb_image(input_image)
+
+
+@pytest.mark.parametrize("input_image", [
+    (np.random.random((10, 10, 0))),
+    (np.random.random((10, 10, 4))),
+    (np.random.random((10, 10, 5))),
+])
+def test_rgb_image_invalid_channels(input_image):
+    with pytest.raises(ValueError):
+        piescope.utils.rgb_image(input_image)
+
+
+def test_rgb_image():
+    input_image = np.array([[1, 2], [3, 4]])
+    result = piescope.utils.rgb_image(input_image)
+    expected = np.stack([input_image, input_image, input_image], axis=-1)
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize("input_image", [
+    (skimage.data.astronaut()[:, :, 0]),
+    (skimage.data.astronaut()[:, :, 0:2]),
+    (skimage.data.astronaut()[:, :, 0:3]),
+    (skimage.data.astronaut()[:, :, 0:4]),
+])
+def test_rgb_image_astronaut(input_image):
+    result = piescope.utils.rgb_image(input_image)
+    assert result.shape[-1] == 3
+    assert np.allclose(result[:, :, 0], skimage.data.astronaut()[:, :, 0])

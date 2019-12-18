@@ -26,3 +26,16 @@ def test_camera_grab_image(basler_detector):
     filename = os.path.join(current_directory, 'basler_emulated_image.png')
     expected = io.imread(filename)
     assert np.allclose(output, expected)
+
+
+@pytest.mark.parametrize("exposure", [
+    (None),
+    (500),
+    (100),
+])
+def test_camera_grab_exposure(basler_detector, exposure):
+    output = basler_detector.camera_grab(exposure_time=exposure)
+    assert output.shape == (1040, 1024)
+    assert basler_detector.camera.ExposureMode.GetValue() == 'Timed'
+    if exposure is not None:
+        assert basler_detector.camera.ExposureTimeAbs.GetValue() == exposure
