@@ -8,6 +8,14 @@ autoscript = pytest.importorskip(
     "autoscript_sdb_microscope_client", reason="Autoscript is not available."
 )
 
+try:
+    from autoscript_sdb_microscope_client import SdbMicroscopeClient
+    microscope = SdbMicroscopeClient()
+    microscope.connect("localhost")
+except Exception as e:
+    pytest.skip("AutoScript cannot connect to localhost, skipping all AutoScript tests.",
+                allow_module_level=True)
+
 
 def test_initialize():
     """Test connecting to the microscope offline with localhost."""
