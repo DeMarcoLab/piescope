@@ -60,9 +60,13 @@ def test_volume_acquisition(mock_sendall, mock_recv, mock_connect,
     output = piescope.lm.volume.volume_acquisition(
         laser_dict, num_z_slices, z_slice_distance, destination,
         time_delay=0.01, count_max=0, threshold=np.Inf)
-    assert output.shape == (3, 1040, 1024, 4)  # (pln, row, col, ch)
     assert output.dtype == np.uint8  # 8-bit output expected
-    emulated_image = piescope.data.basler_image()
-    expected = np.stack([emulated_image for _ in range(4)], axis=-1)
-    expected = np.stack([expected, expected, expected], axis=0)
-    assert np.allclose(output, expected)
+    # Basler emulated mode produces images with shape (1040, 1024)
+    # The real Basler detector in the lab produces images with shape (1200, 1920)
+    # shape has format: (pln, row, col, ch)
+    assert output.shape == (3, 1040, 1024, 4) or output.shape == (3, 1200, 1920, 4)
+    if output.shape == (3, 1040, 1024, 4):
+        emulated_image = piescope.data.basler_image()
+        expected = np.stack([emulated_image for _ in range(4)], axis=-1)
+        expected = np.stack([expected, expected, expected], axis=0)
+        assert np.allclose(output, expected)
