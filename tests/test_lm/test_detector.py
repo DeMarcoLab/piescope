@@ -17,15 +17,21 @@ def basler_detector(monkeypatch):
 
 def test_camera_grab(basler_detector):
     output = basler_detector.camera_grab()
-    assert output.shape == (1040, 1024)
+    assert isinstance(output, np.ndarray)
+    # Basler emulated mode produces images with shape (1040, 1024)
+    # The real Basler detector in the lab produces images with shape (1200, 1920)
+    assert output.shape == (1040, 1024) or output.shape == (1200, 1920)
 
 
 def test_camera_grab_image(basler_detector):
     output = basler_detector.camera_grab()
-    current_directory = os.path.abspath(os.path.dirname(__file__))
-    filename = os.path.join(current_directory, 'basler_emulated_image.png')
-    expected = io.imread(filename)
-    assert np.allclose(output, expected)
+    if output.shape != (1040, 1024):
+        pytest.skip("Real hardware connected for Basler detector, don't check against the emulated image.")
+    else:
+        current_directory = os.path.abspath(os.path.dirname(__file__))
+        filename = os.path.join(current_directory, 'basler_emulated_image.png')
+        expected = io.imread(filename)
+        assert np.allclose(output, expected)
 
 
 @pytest.mark.parametrize("exposure", [
@@ -35,7 +41,18 @@ def test_camera_grab_image(basler_detector):
 ])
 def test_camera_grab_exposure(basler_detector, exposure):
     output = basler_detector.camera_grab(exposure_time=exposure)
-    assert output.shape == (1040, 1024)
+    assert isinstance(output, np.ndarray)
+    # assert output.shape == (1040, 1024)
+    # Check exposure mode is 'Timed'
+    basler_detector.camera.Open()
     assert basler_detector.camera.ExposureMode.GetValue() == 'Timed'
+    basler_detector.camera.Close()
+    # check exposre time is the same as you set it to be
     if exposure is not None:
-        assert basler_detector.camera.ExposureTimeAbs.GetValue() == exposure
+        basler_detector.camera.Open()
+        try:
+            output_exposure_time = basler_detector.camera.ExposureTime.GetValue()
+        except Exception as e:
+            output_exposure_time = basler_detector.camera.ExposureTimeAbs.GetValue()
+        basler_detector.camera.Close()
+        assert exposure == output_exposure_time
