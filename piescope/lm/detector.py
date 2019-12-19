@@ -1,4 +1,6 @@
 """Module for the Basler fluorescence detector."""
+import sys
+
 from pypylon import pylon
 
 
@@ -29,7 +31,15 @@ class Basler():
         self.camera.Open()
         self.camera.ExposureMode.SetValue('Timed')
         if exposure_time is not None:
-            self.camera.ExposureTimeAbs.SetValue(float(exposure_time))
+            try:
+                self.camera.ExposureTime.SetValue(float(exposure_time))
+            except Exception as e:
+                try:
+                    self.camera.ExposureTimeAbs.SetValue(float(exposure_time))
+                except Exception as e:
+                    self.camera.Close()
+                    raise sys.exc_info()
+
         self.camera.StartGrabbingMax(self.imageCount)
         self.image = []
 
