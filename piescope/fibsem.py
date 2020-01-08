@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 """Module for interacting with the FIBSEM using Autoscript."""
 
@@ -192,8 +194,9 @@ def create_rectangular_pattern(microscope, image, x0, x1, y0, y1, depth=1e-6):
         Autoscript rectangle milling pattern. RectanglePattern class object.
     """
     if x0 is None or x1 is None or y0 is None or y1 is None:
-        print("No rectangle selected")
+        logging.warning("No rectangle selected")
         return
+    microscope.imaging.set_active_view(2)  # the ion beam view
     microscope.patterning.clear_patterns()
     pixelsize_x = image.metadata.binary_result.pixel_size.x
     pixelsize_y = image.metadata.binary_result.pixel_size.y
