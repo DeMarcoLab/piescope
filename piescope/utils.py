@@ -1,9 +1,12 @@
+import logging
+
 import numpy as np
 import skimage.color
 import skimage.io
+import skimage.util
 
 
-def save_image(image, destination):
+def save_image(image, destination, metadata={}):
     """Save image to file.
 
     Parameters
@@ -13,16 +16,54 @@ def save_image(image, destination):
     destination : str
         Filename of saved image, with .tif extension.
         Only the .tif file format is reliably supported.
+    metadata : dict, optional
+        This kwarg is ignored for AdornedImage, used only for numpy arrays.
+        Default value is an empty dictionary.
+        There are no restrictions on what key-value pairs you can use here.
+        You can access this metadata in Fiji/ImageJ by opening the saved image
+        with the BioFormats importer and checking the box 'Display Metadata'.
+
+    Notes
+    -----
+    https://www.lfd.uci.edu/~gohlke/code/tifffile.py.html
+
+    Save a volume with xyz voxel size 2.6755x2.6755x3.9474 µm^3 to an ImageJ file:
+
+    >>> volume = numpy.random.randn(57*256*256).astype('float32')
+    >>> volume.shape = 1, 57, 1, 256, 256, 1  # dimensions in TZCYXS order
+    >>> imwrite('temp.tif', volume, imagej=True, resolution=(1./2.6755, 1./2.6755),
+    ...         metadata={'spacing': 3.947368, 'unit': 'um'})
+
     """
     try:
-        from autoscript_sdb_microscope_client.structures import AdornedImage
-    except ImportError:
-        skimage.io.imsave(destination, image)
-    else:
-        if type(image) is AdornedImage:
-            image.save(destination)
+        image.save(destination)  # eg: for AutoScript AdornedImage datatypes
+        logging.debug("Saved: {}".format(destination))
+        # Metadata for AdornedImage types is saved in the OME-TIFF metadata.
+        # You can load the image and metadata back in using .load(), eg:
+        # from autoscript_sdb_microscope_client.structures import AdornedImage
+        # returned_image = AdornedImage().load("autoscript_save_filename.tif")
+    except AttributeError:
+        # numpy array metadata is saved with regular metadata (not OME-TIFF)
+        if isinstance(image, np.ndarray):
+            # Make sure we have the right datatype to svae for ImageJ
+            if image.dtype.char not in 'BHhf':  # uint8, uint16, int16, or ?
+                image = skimage.util.img_as_uint(image)  # 16 bit unsigned int
+            # If it's a volume image, must move channel axis before saving
+            if image.ndim == 4:  # volume image (ZYXC)
+                image = np.moveaxis(image, 1, -1)  # move channel axis (ZCYX)
+                metadata.update({'axes':'ZCYX'})
+                skimage.io.imsave(destination, image, imagej=True,
+                    metadata=metadata)
+                logging.debug("Saved: {}".format(destination))
+            else:  # Save all other images without changes
+                skimage.io.imsave(destination, image, imagej=True,
+                    metadata=metadata)
+                logging.debug("Saved: {}".format(destination))
         else:
-            skimage.io.imsave(destination, image)
+            raise ValueError(
+                "Cannot save image! Expected a numpy array or AdornedImage, "
+                "instead found image.dtype of {}".format(image.dtype)
+                )
 
 
 def max_intensity_projection(image, start_slice=0, end_slice=None):

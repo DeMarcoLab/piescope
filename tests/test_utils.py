@@ -35,9 +35,15 @@ def test_save_numpy_array(tmpdir, array_type):
     piescope.utils.save_image(image, save_filename)
     retrieved_image = skimage.io.imread(save_filename)
     assert retrieved_image.shape == (884, 1024)
-    assert retrieved_image.dtype == array_type
-    assert np.allclose(image, retrieved_image)
-
+    condition_one = retrieved_image.dtype == array_type
+    condition_two = retrieved_image.dtype == np.uint16
+    assert condition_one or condition_two
+    if condition_one:
+        assert np.allclose(image, retrieved_image)
+    elif condition_two:
+        assert np.allclose(skimage.util.img_as_uint(image), retrieved_image)
+    else:
+        assert False  # We should never reach this clause, fail test if so
 
 @pytest.mark.parametrize("array_type", [
     (int),
