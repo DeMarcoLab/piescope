@@ -10,7 +10,7 @@ import piescope.lm.objective
 logger = logging.getLogger(__name__)
 
 
-def volume_acquisition(laser_dict, num_z_slices, z_slice_distance, destination,
+def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
                        time_delay=1, count_max=5, threshold=5):
     """Acquire an image volume using the fluorescence microscope.
 
@@ -25,9 +25,6 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance, destination,
 
     z_slice_distance : int
         Distance in nm between each z slice
-
-    destination : str
-        Path to save location for images taken during volume acquisition
 
     time_delay : int, optional
         Pause after moving to the top of the imaging volume, by default 1
@@ -51,6 +48,7 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance, destination,
     It's good to assume a minimum of 0.5 microns per step,
     and a maximum 300 microns total height for the volume acquisition.
     """
+    logging.info("Acquiring fluorescence volume...")
     num_z_slices = int(num_z_slices)
     z_slice_distance = int(z_slice_distance)
     total_volume_height = (num_z_slices - 1) * z_slice_distance
@@ -75,7 +73,10 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance, destination,
 
     # Acquire volume image
     for z_slice in range(int(num_z_slices)):
+        logging.debug("z_slice: {}".format(z_slice))
         for channel, (laser_name, (laser_power, exposure_time)) in enumerate(laser_dict.items()):
+            print("z_slice: {}, laser: {}".format(z_slice, laser_name))
+            logging.debug("laser_name: {}".format(laser_name))
             # Take an image
             lasers[laser_name].emission_on()
             volume[z_slice, :, :, channel] = detector.camera_grab(exposure_time)
@@ -101,5 +102,7 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance, destination,
 
     # Finally, return the objective lens stage too original position
     objective_stage.move_absolute(original_center_position)
-
+    logging.debug("Volume acquired, stage returned to its original position.")
+    logging.debug("Volume array shape: {}".format(volume.shape))
+    logging.info("Fluorescence volume acquistion finished.")
     return volume

@@ -43,7 +43,7 @@ def test_mock_objective_stage(mock_sendall, mock_recv, mock_connect):
 @mock.patch.object(StageController, 'recv')
 @mock.patch.object(StageController, 'sendall')
 def test_volume_acquisition(mock_sendall, mock_recv, mock_connect,
-                            mock_current_position, tmpdir, monkeypatch):
+                            mock_current_position, monkeypatch):
     mock_current_position.return_value = 5
     monkeypatch.setenv("PYLON_CAMEMU", "1")
     power = 0.01  # as a percentage
@@ -56,9 +56,8 @@ def test_volume_acquisition(mock_sendall, mock_recv, mock_connect,
     }
     num_z_slices = 3
     z_slice_distance = 10
-    destination = tmpdir
     output = piescope.lm.volume.volume_acquisition(
-        laser_dict, num_z_slices, z_slice_distance, destination,
+        laser_dict, num_z_slices, z_slice_distance,
         time_delay=0.01, count_max=0, threshold=np.Inf)
     assert output.dtype == np.uint8  # 8-bit output expected
     # Basler emulated mode produces images with shape (1040, 1024)
