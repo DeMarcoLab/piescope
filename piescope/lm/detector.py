@@ -22,7 +22,7 @@ class Basler():
         Parameters
         ----------
         exposure_time : int
-            Exposure time, in microseconds.
+            Exposure time, in microseconds (us).
 
         Returns
         -------
