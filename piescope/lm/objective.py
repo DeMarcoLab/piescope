@@ -3,12 +3,12 @@
 SMARACT stage hardware.
 """
 import logging
-from socket import socket, AF_INET, SOCK_STREAM
+import socket
 
 logger = logging.getLogger(__name__)
 
 
-class StageController(socket):
+class StageController(socket.socket):
     """Class for connecting to the SMARACT objective stage controller."""
     def __init__(self, host='169.254.111.111', port=139, timeout=5.0,
                  testing=False):
@@ -35,16 +35,22 @@ class StageController(socket):
             Error raised if socket connection to SMARACT ojbective lens stage
             cannot be established.
         """
-        super().__init__(family=AF_INET, type=SOCK_STREAM)
+        super().__init__(family=socket.AF_INET, type=socket.SOCK_STREAM)
         self.settimeout(timeout)
         if not testing:
-            try:
-                self.connect((host, port))
-                print('Successfully connected to SMARACT objective lens stage')
-            except Exception as e:
-                logger.error("SMARACT objective stage error: " + str(e))
-                raise RuntimeError('Cannot connect to SMARACT stage! '
-                                   'Error: {}'.format(e))
+            # try:
+            self.connect((host, port))
+            print('Successfully connected to SMARACT objective lens stage')
+            # except socket.timeout:
+            #     # handle the timeout
+            # except Exception as e:
+            #     logger.error("SMARACT objective stage error: " + str(e))
+            #     raise RuntimeError('Cannot connect to SMARACT stage! '
+            #                        'Error: {}'.format(e))
+
+    def disconnect(self):
+        self.shutdown(socket.SHUT_RDWR)
+        self.close()
 
     def initialise_system_parameters(self, relative_accumulation=0,
                                      reference_mark=0, reference_hold=1000,
