@@ -11,6 +11,25 @@ def initialize(ip_address='10.0.0.1'):
     microscope.connect(ip_address)
     return microscope
 
+# Too far! even futher than the fluorescence position
+# x = 54.5085 mm <-- LIMIT HIT
+#
+# Fluorescence position (roughly)
+# x = +48.4295 mm
+# y = -10.1004 mm
+#
+# FIBSEM position (roughly)
+# x = -1.5225 mm
+# y = -9.9092 mm
+#
+# Too far! even further than the FIBSEM place
+# x = -51.4745 mm
+# y = -9.718 mm
+# z = -4.0000 mm
+#
+# LIMIT!
+# x = -55.4915 mm <- LIMIT HIT
+#
 
 def move_to_light_microscope(microscope, x=50.0e-3, y=0.0):
     """Move the sample stage from the FIBSEM to the light microscope.
