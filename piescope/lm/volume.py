@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
-                       time_delay=1, count_max=5, threshold=5):
+                       time_delay=1, count_max=5, threshold=5,
+                       detector=None, lasers=None, objective_stage=None):
     """Acquire an image volume using the fluorescence microscope.
 
     Parameters
@@ -38,6 +39,18 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
         is close enough to the target position. Must be a positive number.
         By default 5
 
+    detector : piescope.lm.detector.Basler(), optional
+        Fluorescence detector class instance.
+        Default value is None.
+
+    lasers : piescope.lm.lasers.Laser(), optional
+        Lasers.
+        Default value is None.
+
+    objective_stage : piescope.lm.objective.StageController(), optional
+        Objective lens stage class instance.
+        Default value is None.
+
     Returns
     -------
     volume : multidimensional numpy array
@@ -54,9 +67,13 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
     total_volume_height = (num_z_slices - 1) * z_slice_distance
 
     # Initialize hardware
-    objective_stage = piescope.lm.objective.StageController()
-    lasers = piescope.lm.laser.initialize_lasers()
-    detector = piescope.lm.detector.Basler()
+    if detector is None:
+        detector = piescope.lm.detector.Basler()
+    if lasers is None:
+        lasers = piescope.lm.laser.initialize_lasers()
+    if objective_stage is None:
+        objective_stage = piescope.lm.objective.StageController()
+
     for laser_name, (laser_power, exposure_time) in laser_dict.items():
         lasers[laser_name].laser_power = laser_power
 

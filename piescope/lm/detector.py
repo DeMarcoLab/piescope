@@ -57,3 +57,25 @@ class Basler():
         self.camera.Close()
 
         return self.image
+
+    def minimum_exposure(self):
+        """Minimum alloable exposure time."""
+        try:
+            min_exposure = self.camera.ExposureTime.Min
+        except Exception:
+            try:
+                min_exposure = self.camera.ExposureTimeAbs.Min
+            except Exception:
+                raise sys.exc_info()
+        return min_exposure
+
+    def maximum_exposure(self):
+        """Maximum alloable exposure time."""
+        try:
+            max_exposure = self.camera.ExposureTime.Max
+        except Exception:
+            try:
+                max_exposure = self.camera.ExposureTimeAbs.Max
+            except Exception:
+                raise sys.exc_info()
+        return max_exposure
