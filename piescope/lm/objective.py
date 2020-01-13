@@ -175,7 +175,7 @@ class StageController(socket.socket):
         Parameters
         ----------
         position : int
-            Position in nm to move to relative to 0 position.
+            Position in nanometers (nm) to move to relative to zero position.
 
         hold : int
             Time in ms to keep power high after moving to absolute position.
@@ -202,7 +202,7 @@ class StageController(socket.socket):
         Parameters
         ----------
         position : int
-            Position in nm to move to, relative to current position.
+            Position in nanometers to move to, relative to current position.
 
         hold : int
             Time in ms to keep power high after moving to relative position.

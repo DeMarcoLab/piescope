@@ -1,4 +1,5 @@
 import logging
+import os
 
 import numpy as np
 import skimage.color
@@ -6,7 +7,7 @@ import skimage.io
 import skimage.util
 
 
-def save_image(image, destination, metadata={}):
+def save_image(image, destination, metadata={}, allow_overwrite=False):
     """Save image to file.
 
     Parameters
@@ -22,6 +23,8 @@ def save_image(image, destination, metadata={}):
         There are no restrictions on what key-value pairs you can use here.
         You can access this metadata in Fiji/ImageJ by opening the saved image
         with the BioFormats importer and checking the box 'Display Metadata'.
+    allow_overwrite : bool, optional
+        Whether to allow overwriting existing files. Default is False.
 
     Notes
     -----
@@ -35,6 +38,16 @@ def save_image(image, destination, metadata={}):
     ...         metadata={'spacing': 3.947368, 'unit': 'um'})
 
     """
+    # Modify filename to prevernt overwriting, if allow_overwrite is False
+    if allow_overwrite is False:
+        counter = 1
+        while os.path.exists(destination):
+            base, ext = os.path.splitext(destination)
+            destination = base + "({})".format(str(counter)) + ext
+            counter = +1
+    # If directory does not currently exist, create it
+    if not os.path.isdir(os.path.dirname(destination)):
+        os.makedirs(os.path.dirname(destination))
     try:
         image.save(destination)  # eg: for AutoScript AdornedImage datatypes
         logging.debug("Saved: {}".format(destination))
@@ -49,9 +62,15 @@ def save_image(image, destination, metadata={}):
             if image.dtype.char not in 'BHhf':  # uint8, uint16, int16, or ?
                 image = skimage.util.img_as_uint(image)  # 16 bit unsigned int
             # If it's a volume image, must move channel axis before saving
-            if image.ndim == 4:  # volume image (ZYXC)
-                image = np.moveaxis(image, 1, -1)  # move channel axis (ZCYX)
+            if image.ndim == 4:  # (ZYXC)
+                image = np.moveaxis(image, -1, 1)  # move channel axis (ZCYX)
                 metadata.update({'axes':'ZCYX'})
+                skimage.io.imsave(destination, image, imagej=True,
+                    metadata=metadata)
+                logging.debug("Saved: {}".format(destination))
+            if image.ndim == 3:  # (YXC)
+                image = np.moveaxis(image, -1, 0)  # move channel axis (CYX)
+                metadata.update({'axes':'CYX'})
                 skimage.io.imsave(destination, image, imagej=True,
                     metadata=metadata)
                 logging.debug("Saved: {}".format(destination))
