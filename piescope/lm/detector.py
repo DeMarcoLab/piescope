@@ -1,6 +1,8 @@
 """Module for the Basler fluorescence detector."""
 import sys
 
+import numpy as np
+
 from pypylon import pylon
 
 
@@ -16,7 +18,7 @@ class Basler():
         self.currentImageIndex = 0
         self.image = []
 
-    def camera_grab(self, exposure_time=None):
+    def camera_grab(self, exposure_time=None, flip_image=True):
         """Grab a new image from the Basler detector.
 
         Parameters
@@ -38,7 +40,7 @@ class Basler():
                     self.camera.ExposureTimeAbs.SetValue(float(exposure_time))
                 except Exception as e:
                     self.camera.Close()
-                    raise sys.exc_info()
+                    raise e
 
         self.camera.StartGrabbingMax(self.imageCount)
         self.image = []
@@ -55,7 +57,8 @@ class Basler():
                                    )
             grabResult.Release()
         self.camera.Close()
-
+        if flip_image is True:
+            self.image = np.flipud(self.image)
         return self.image
 
     def minimum_exposure(self):
@@ -65,8 +68,8 @@ class Basler():
         except Exception:
             try:
                 min_exposure = self.camera.ExposureTimeAbs.Min
-            except Exception:
-                raise sys.exc_info()
+            except Exception as e:
+                raise e
         return min_exposure
 
     def maximum_exposure(self):
@@ -76,6 +79,6 @@ class Basler():
         except Exception:
             try:
                 max_exposure = self.camera.ExposureTimeAbs.Max
-            except Exception:
-                raise sys.exc_info()
+            except Exception as e:
+                raise e
         return max_exposure
