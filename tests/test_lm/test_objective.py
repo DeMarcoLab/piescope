@@ -2,6 +2,7 @@ import mock
 
 import numpy as np
 import pytest
+import socket
 
 from piescope.lm.objective import StageController
 
@@ -20,7 +21,7 @@ def test_StageController():
 
 
 def test_graceful_connection_error():
-    with pytest.raises(RuntimeError):
+    with pytest.raises(socket.gaierror):
         stage = StageController(host='invalid', timeout=0.5)
         assert stage is None
 
