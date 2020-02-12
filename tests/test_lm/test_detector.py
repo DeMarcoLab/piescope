@@ -29,7 +29,12 @@ def test_camera_grab_image(basler_detector):
         pytest.skip("Real hardware connected for Basler detector, don't check against the emulated image.")
     else:
         current_directory = os.path.abspath(os.path.dirname(__file__))
-        filename = os.path.join(current_directory, 'basler_emulated_image.png')
+        # Note: we vertically flip the fluorescence detector images
+        # so they match the view of the FIBSEM images,
+        # because of how our fluorescence detector is installed (tight space!)
+        filename = os.path.join(
+            current_directory, 'basler_flipped_emulated_image.png'
+        )
         expected = io.imread(filename)
         assert np.allclose(output, expected)
 
