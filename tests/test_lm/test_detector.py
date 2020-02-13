@@ -2,7 +2,8 @@ import os
 
 import numpy as np
 import pytest
-from skimage import io
+
+import piescope.data
 
 pytest.importorskip('pypylon', reason="The pypylon library is not available.")
 
@@ -28,14 +29,7 @@ def test_camera_grab_image(basler_detector):
     if output.shape != (1040, 1024):
         pytest.skip("Real hardware connected for Basler detector, don't check against the emulated image.")
     else:
-        current_directory = os.path.abspath(os.path.dirname(__file__))
-        # Note: we vertically flip the fluorescence detector images
-        # so they match the view of the FIBSEM images,
-        # because of how our fluorescence detector is installed (tight space!)
-        filename = os.path.join(
-            current_directory, 'basler_flipped_emulated_image.png'
-        )
-        expected = io.imread(filename)
+        expected = piescope.data.basler_image()
         assert np.allclose(output, expected)
 
 
