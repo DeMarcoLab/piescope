@@ -68,7 +68,6 @@ Run these commands in your terminal to create a new development environment:
 ```
 conda create -n piescope-dev python=3.6 pip
 conda activate piescope-dev
-pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
@@ -77,7 +76,7 @@ pip install -r requirements-dev.txt
 To add the AutoScript python packages to your new conda environment, follow these three steps:
 
 1. Find the python environment that was created with your AutoScript installation.
-Typically, you can expect the environment is named 'Autoscript', and its installed packages should be found at: 
+Typically, you can expect the environment is named 'Autoscript', and its installed packages should be found at:
 `C:\Program Files\Python35\envs\AutoScript\Lib\site-packages\`
 
 ***Troubleshooting:** If you're having trouble finding the location AutoScript chose to install its python packages into,*
@@ -86,7 +85,7 @@ Typically, you can expect the environment is named 'Autoscript', and its install
 *Navigate to the environment location (in the example here, that's `C:\Program Files\Python35\envs\AutoScript\` *
 *then change directories into `Lib`, and then the `site-packages` directory. This is where the python packages live.*
 
-2. Find the conda environment location you just made called `piescope-dev`. 
+2. Find the conda environment location you just made called `piescope-dev`.
 `...conda/envs/piescope-dev/Lib/site-packages/`
 
 ***Troubleshooting:** If you're having trouble finding the conda environment location for `piescope-dev`*
@@ -130,8 +129,8 @@ If there is no `ImportError` raised, then you have been sucessful.
 
 ### Installing the Pylon Software Suite and pypylon python library
 
-The Pylon software suite is produced by Basler for use with their detectors. 
-Instructions for downloading and installing the latest version of Pylon can be found on their website: 
+The Pylon software suite is produced by Basler for use with their detectors.
+Instructions for downloading and installing the latest version of Pylon can be found on their website:
 https://www.baslerweb.com/en/products/software/basler-pylon-camera-software-suite/
 
 Basler also provide a Python API for use with their detectors and the Pylon software suite.
@@ -153,7 +152,7 @@ properly to your conda environment, you may see this error:
 ModuleNotFoundError: No module named 'autoscript_sdb_microscope_client'
 ```
 
-If this is the case re-try the previous step again, 
+If this is the case re-try the previous step again,
 and check which packages (and versions) are in your conda environment using `conda list`.
 
 ## Make your changes
