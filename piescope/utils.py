@@ -1,5 +1,7 @@
+from datetime import datetime
 import logging
 import os
+import re
 
 import numpy as np
 import skimage.color
@@ -7,7 +9,8 @@ import skimage.io
 import skimage.util
 
 
-def save_image(image, destination, metadata={}, allow_overwrite=False):
+def save_image(image, destination, metadata={}, *, allow_overwrite=False,
+               timestamp=True):
     """Save image to file.
 
     Parameters
@@ -25,6 +28,10 @@ def save_image(image, destination, metadata={}, allow_overwrite=False):
         with the BioFormats importer and checking the box 'Display Metadata'.
     allow_overwrite : bool, optional
         Whether to allow overwriting existing files. Default is False.
+    timestamp : bool, optional
+        Time stamp appended to filename.
+        Uses ISO 8601 standard format, YYYY-mm-ddTTHHmmsszz
+        ISO 8601 reference: https://en.wikipedia.org/wiki/ISO_8601
 
     Notes
     -----
@@ -38,16 +45,34 @@ def save_image(image, destination, metadata={}, allow_overwrite=False):
     ...         metadata={'spacing': 3.947368, 'unit': 'um'})
 
     """
-    # Modify filename to prevernt overwriting, if allow_overwrite is False
+    destination = os.path.normpath(destination)
+    # Make sure the output file format is acceptable
+    SUPPORTED_IMAGE_TYPES = ('.tif')
+    if not destination.endswith(SUPPORTED_IMAGE_TYPES):
+        destination += '.tif'
+    # Append timestamp string to filename, if needed
+    if timestamp:
+        timestamp_string = datetime.now().strftime("_%Y-%m-%dT%H%M%S%f")
+        base, ext = os.path.splitext(destination)
+        destination = base + timestamp_string + ext
+    # Modify filename to prevent overwriting, if allow_overwrite is False
+    # Appends filenames with "_(1)", "_(2)", etc.
     if allow_overwrite is False:
-        counter = 1
         while os.path.exists(destination):
             base, ext = os.path.splitext(destination)
-            destination = base + "({})".format(str(counter)) + ext
-            counter = +1
+            regex_match = re.search("_\([0-9]*\)$", base)
+            if regex_match:
+                current_idx = int(regex_match.group(0)[2:-1])  # strip "_(" ")"
+                suffix_len = len(regex_match.group(0))
+                destination = (
+                    base[:-suffix_len] + "_({})".format(current_idx + 1) + ext
+                )
+            else:
+                destination = base + "_(1)" + ext
     # If directory does not currently exist, create it
-    if not os.path.isdir(os.path.dirname(destination)):
-        os.makedirs(os.path.dirname(destination))
+    directory_name = os.path.dirname(destination)
+    if not directory_name == '' and not os.path.isdir(directory_name):
+        os.makedirs(directory_name)
     try:
         image.save(destination)  # eg: for AutoScript AdornedImage datatypes
         logging.debug("Saved: {}".format(destination))

@@ -1,3 +1,5 @@
+from datetime import datetime
+import mock
 import os
 
 import numpy as np
@@ -22,7 +24,7 @@ import piescope.utils
     (np.float16),
     (np.float32),
     ])
-def test_save_numpy_array(tmpdir, array_type):
+def test_save_array_types(tmpdir, array_type):
     image = piescope.data.autoscript_image()
     if array_type in [float, np.float16, np.float32]:
         image = skimage.util.img_as_float(image)
@@ -32,7 +34,7 @@ def test_save_numpy_array(tmpdir, array_type):
         os.remove(save_filename)
     except FileNotFoundError:
         pass
-    piescope.utils.save_image(image, save_filename)
+    piescope.utils.save_image(image, save_filename, timestamp=False)
     retrieved_image = skimage.io.imread(save_filename)
     assert retrieved_image.shape == (884, 1024)
     condition_one = retrieved_image.dtype == array_type
@@ -44,6 +46,37 @@ def test_save_numpy_array(tmpdir, array_type):
         assert np.allclose(skimage.util.img_as_uint(image), retrieved_image)
     else:
         assert False  # We should never reach this clause, fail test if so
+
+
+def test_save_image_timestamp(tmpdir):
+    image = piescope.data.autoscript_image()
+    with mock.patch('piescope.utils.datetime') as mock_date:
+        mock_date.now.return_value = datetime(2020, 2, 11, hour=14, minute=51,
+                                              second=59, microsecond=627406)
+        expected_time_string = "2020-02-11T145159627406"
+        # mock_date.side_effect = lambda *args, **kwargs: now(*args, **kwargs)
+        save_filename = os.path.join(tmpdir, 'save-image-timestamp.tif')
+        piescope.utils.save_image(image, save_filename, timestamp=True)
+    # Check result
+    expected_filename = os.path.join(tmpdir,
+        'save-image-timestamp_' + expected_time_string + '.tif')
+    assert os.path.exists(expected_filename)
+
+
+def test_multiple_save_image(tmpdir):
+    image = piescope.data.autoscript_image()
+    save_filename = os.path.join(tmpdir, 'multiples-files-same-name.tif')
+    for _ in range(3):
+        piescope.utils.save_image(
+            image, save_filename, allow_overwrite=False, timestamp=False
+        )
+    expected_file_1 = os.path.join(tmpdir, 'multiples-files-same-name.tif')
+    expected_file_2 = os.path.join(tmpdir, 'multiples-files-same-name_(1).tif')
+    expected_file_3 = os.path.join(tmpdir, 'multiples-files-same-name_(2).tif')
+    assert os.path.exists(expected_file_1)
+    assert os.path.exists(expected_file_2)
+    assert os.path.exists(expected_file_3)
+
 
 @pytest.mark.parametrize("array_type", [
     (int),
