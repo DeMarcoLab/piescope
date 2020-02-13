@@ -1,4 +1,6 @@
 import os
+
+import numpy as np
 import skimage.io
 
 data_dir = os.path.abspath(os.path.dirname(__file__))
@@ -23,6 +25,10 @@ def basler_image():
     """Load a copy of the Basler Fluorescence detector emulator image."""
     filename = os.path.join(data_dir, 'basler.png')
     img = skimage.io.imread(filename)
+    img = np.flipud(img)
+    # Note: we vertically flip the fluorescence detector images
+    # so they match the view of the FIBSEM images,
+    # because of how our fluorescence detector is installed (tight space!)
     return img
 
 
