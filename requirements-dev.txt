@@ -1,0 +1,5 @@
+-r requirements/default.txt
+-r requirements/development.txt
+-r requirements/documentation.txt
+-r requirements/release.txt
+-r requirements/test.txt

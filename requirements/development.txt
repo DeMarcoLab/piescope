@@ -1,9 +1,4 @@
-pytest>=4.3.0
-pytest-cov
-pytest-mpl
-coveralls
+autopep8
+flake8
 ipython
 jupyter
-flake8
-autopep8
-mock
