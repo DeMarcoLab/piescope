@@ -1,6 +1,6 @@
 # piescope
 
-PIE-scope: integrated cryo-correlative light and FIB/SEM microscopy
+**PIE-scope: integrated cryo-correlative light and FIB/SEM microscopy**
 
 This is the back end library supporting PIE-scope microscopy functions.
 The front ebd GUI can be found at: https://github.com/DeMarcoLab/piescope_gui
