@@ -5,6 +5,7 @@ import numpy as np
 import piescope.lm.detector
 import piescope.lm.laser
 import piescope.lm.objective
+import piescope.lm.structured
 
 
 logger = logging.getLogger(__name__)
@@ -69,13 +70,13 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
     # Initialize hardware
     if detector is None:
         detector = piescope.lm.detector.Basler()
-    if lasers is None:
-        lasers = piescope.lm.laser.initialize_lasers()
+    # if lasers is None:
+    #     lasers = piescope.lm.laser.initialize_lasers()
     if objective_stage is None:
         objective_stage = piescope.lm.objective.StageController()
-
-    for laser_name, (laser_power, exposure_time) in laser_dict.items():
-        lasers[laser_name].laser_power = laser_power
+    #
+    # for laser_name, (laser_power, exposure_time) in laser_dict.items():
+    #     lasers[laser_name].laser_power = laser_power
 
     # Move objective lens stage to the top of the volume
     original_center_position = str(objective_stage.current_position())
@@ -94,10 +95,16 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
         for channel, (laser_name, (laser_power, exposure_time)) in enumerate(laser_dict.items()):
             print("z_slice: {}, laser: {}".format(z_slice, laser_name))
             logging.debug("laser_name: {}".format(laser_name))
+
+            for pattern in range(9):
+                piescope.lm.structured.multi_line_pulse(10, 'P25', 'P27')
+                piescope.lm.structured.single_line_pulse(10, 'P24')
+
+            # Leftover code, remove when tested
             # Take an image
-            lasers[laser_name].emission_on()
-            volume[z_slice, :, :, channel] = detector.camera_grab(exposure_time)
-            lasers[laser_name].emission_off()
+            # lasers[laser_name].emission_on()
+            # /// ask sergy volume[z_slice, :, :, channel] = detector.camera_grab(exposure_time)
+            # lasers[laser_name].emission_off()
             # Move objective lens stage
             target_position = (float(original_center_position)
                                + float(total_volume_height / 2.)
