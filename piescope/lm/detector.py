@@ -4,6 +4,7 @@ import sys
 import numpy as np
 
 from pypylon import pylon
+from piescope.lm import structured
 
 
 class Basler():
@@ -29,6 +30,8 @@ class Basler():
             Trigger mode, possible values:
             'hardware'
             'software'
+        flip_image : bool, optional
+            Whether to flip images, by default True
 
         Returns
         -------
