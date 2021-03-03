@@ -1,10 +1,10 @@
 """Module for communication with the national intstruments controller.
 """
 
-import niqadmx
+import nidaqmx
 import time
 from datetime import datetime
-from niqadmx.constants import (LineGrouping)
+from nidaqmx.constants import (LineGrouping)
 
 LINES = {'P00': 'Dev1/port0/line0',
          'P01': 'Dev1/port0/line1',
