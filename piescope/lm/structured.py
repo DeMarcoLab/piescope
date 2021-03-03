@@ -3,7 +3,6 @@
 
 import nidaqmx
 import time
-from datetime import datetime
 from nidaqmx.constants import (LineGrouping)
 
 LINES = {'P00': 'Dev1/port0/line0',
