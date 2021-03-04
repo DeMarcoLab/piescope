@@ -27,11 +27,13 @@ class Basler():
         exposure_time : int
             Exposure time, in microseconds (us).
         trigger_mode : str
-            Trigger mode, possible values:
-            'hardware'
-            'software'
+            Trigger mode.
+            Available values are "software", "hardware"
         flip_image : bool, optional
             Whether to flip images, by default True
+        laser_name : str
+            Name of laser to use in live imaging.
+            Available values are "laser640", "laser561", "laser488", "laser405"
 
         Returns
         -------
@@ -81,7 +83,7 @@ class Basler():
         return self.image
 
     def minimum_exposure(self):
-        """Minimum alloable exposure time."""
+        """Minimum allowable exposure time."""
         try:
             min_exposure = self.camera.ExposureTime.Min
         except Exception:
@@ -92,7 +94,7 @@ class Basler():
         return min_exposure
 
     def maximum_exposure(self):
-        """Maximum alloable exposure time."""
+        """Maximum allowable exposure time."""
         try:
             max_exposure = self.camera.ExposureTime.Max
         except Exception:
