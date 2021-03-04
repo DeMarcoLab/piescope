@@ -37,7 +37,7 @@ def single_line_pulse(delay, pin):
     task.do_channels.add_do_chan(
         LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES)
     task.write(True)
-    time.sleep(delay/1e3)
+    time.sleep(delay/1e6)
     task.write(False)
     task.close()
 
@@ -48,6 +48,6 @@ def multi_line_pulse(delay, *pins):
         task.do_channels.add_do_chan(
             LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES)
     task.write([True]*len(pins))
-    time.sleep(delay/1e3)
+    time.sleep(delay/1e6)
     task.write([False]*len(pins))
     task.close()
