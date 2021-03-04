@@ -18,8 +18,9 @@ class Basler():
         self.imageCount = 1
         self.currentImageIndex = 0
         self.image = []
+        self.camera_pin = 'P07'
 
-    def camera_grab(self, exposure_time=None, trigger_mode='software', flip_image=True):
+    def camera_grab(self, exposure_time=None, trigger_mode='software', flip_image=True, laser_name=None):
         """Grab a new image from the Basler detector.
 
         Parameters
@@ -41,6 +42,14 @@ class Basler():
         """
         self.camera.Open()
         self.camera.StopGrabbing()
+
+        if laser_name is not None:
+            LASER_TO_PIN = {"laser640": 'P01',
+                            "laser561": 'P02',
+                            "laser488": 'P03',
+                            "laser405": 'P04',
+                            }
+            laser_pin = LASER_TO_PIN[laser_name]
 
         if trigger_mode is 'software':
             self.camera.TriggerMode.SetValue('Off')
@@ -67,6 +76,9 @@ class Basler():
         self.image = []
 
         while self.camera.IsGrabbing():
+            if trigger_mode is 'hardware':
+                structured.multi_line_pulse(exposure_time, self.camera_pin, laser_pin)
+
             grabResult = self.camera.RetrieveResult(
                 5000, pylon.TimeoutHandling_ThrowException)
 
