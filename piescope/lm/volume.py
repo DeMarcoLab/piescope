@@ -67,6 +67,12 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
     z_slice_distance = int(z_slice_distance)
     total_volume_height = (num_z_slices - 1) * z_slice_distance
 
+    LASER_TO_PIN = {"laser640": 'P01',
+                    "laser561": 'P02',
+                    "laser488": 'P03',
+                    "laser405": 'P03',
+                    }
+
     # Initialize hardware
     if detector is None:
         detector = piescope.lm.detector.Basler()
@@ -74,7 +80,6 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
     #     lasers = piescope.lm.laser.initialize_lasers()
     if objective_stage is None:
         objective_stage = piescope.lm.objective.StageController()
-    #
     # for laser_name, (laser_power, exposure_time) in laser_dict.items():
     #     lasers[laser_name].laser_power = laser_power
 
@@ -97,14 +102,14 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
             logging.debug("laser_name: {}".format(laser_name))
 
             for pattern in range(9):
-                piescope.lm.structured.multi_line_pulse(10, 'P25', 'P27')
-                piescope.lm.structured.single_line_pulse(10, 'P24')
+                piescope.lm.structured.multi_line_pulse(exposure_time, 'P25', LASER_TO_PIN[laser_name])
+                piescope.lm.structured.single_line_pulse(10, 'P27')
 
             # Leftover code, remove when tested
             # Take an image
             # lasers[laser_name].emission_on()
-            # /// ask sergy volume[z_slice, :, :, channel] = detector.camera_grab(exposure_time)
             # lasers[laser_name].emission_off()
+
             # Move objective lens stage
             target_position = (float(original_center_position)
                                + float(total_volume_height / 2.)
