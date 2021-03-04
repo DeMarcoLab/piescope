@@ -33,8 +33,6 @@ LINES = {'P00': 'Dev1/port0/line0',
 
 
 def single_line_pulse(delay, pin):
-    print(pin)
-    print(LINES[pin])
     task = nidaqmx.Task()
     task.do_channels.add_do_chan(
         LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES)
@@ -47,7 +45,6 @@ def single_line_pulse(delay, pin):
 def multi_line_pulse(delay, *pins):
     task = nidaqmx.Task()
     for pin in pins:
-        print(pin)
         task.do_channels.add_do_chan(
             LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES)
     task.write([True]*len(pins))
