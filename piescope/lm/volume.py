@@ -67,11 +67,7 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
     z_slice_distance = int(z_slice_distance)
     total_volume_height = (num_z_slices - 1) * z_slice_distance
 
-    LASER_TO_PIN = {"laser640": 'P01',
-                    "laser561": 'P02',
-                    "laser488": 'P03',
-                    "laser405": 'P03',
-                    }
+    pattern_pin = 'P27'
 
     # Initialize hardware
     if detector is None:
@@ -92,7 +88,7 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
     # Create volume array to put the results into
     array_shape = np.shape(detector.camera_grab())  # no lasers on
     volume = np.ndarray(dtype=np.uint8,
-        shape=(num_z_slices, array_shape[0], array_shape[1], len(laser_dict)))
+        shape=(num_z_slices, array_shape[0], array_shape[1], len(laser_dict), 9))
 
     # Acquire volume image
     for z_slice in range(int(num_z_slices)):
@@ -102,8 +98,9 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
             logging.debug("laser_name: {}".format(laser_name))
 
             for pattern in range(9):
-                piescope.lm.structured.multi_line_pulse(exposure_time, 'P25', LASER_TO_PIN[laser_name])
-                piescope.lm.structured.single_line_pulse(10, 'P27')
+                volume[z_slice, :, :, channel, pattern] = detector.camera_grab(exposure_time, trigger_mode='hardware',
+                                                                               laser_name=laser_name)
+                piescope.lm.structured.single_line_pulse(10, pattern_pin)
 
             # Leftover code, remove when tested
             # Take an image
