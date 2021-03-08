@@ -18,7 +18,7 @@ class Basler():
         self.imageCount = 1
         self.currentImageIndex = 0
         self.image = []
-        self.camera_pin = 'P07'
+        self.camera_pin = 'P03'
 
     def camera_grab(self, exposure_time=None, trigger_mode='software', flip_image=True, laser_name=None):
         """Grab a new image from the Basler detector.
@@ -44,10 +44,10 @@ class Basler():
         self.camera.StopGrabbing()
 
         if laser_name is not None:
-            LASER_TO_PIN = {"laser640": 'P01',
-                            "laser561": 'P02',
-                            "laser488": 'P03',
-                            "laser405": 'P04',
+            LASER_TO_PIN = {"laser640": 'P10',
+                            "laser561": 'P05',
+                            "laser488": 'P12',
+                            "laser405": 'P13',
                             }
             laser_pin = LASER_TO_PIN[laser_name]
 
