@@ -51,3 +51,11 @@ def multi_line_pulse(delay, *pins):
     time.sleep(delay/1e6)
     task.write([False]*len(pins))
     task.close()
+
+
+def single_line_onoff(onoff, pin):
+    task = nidaqmx.Task()
+    task.do_channels.add_do_chan(
+        LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES)
+    task.write(onoff)
+    task.close()
