@@ -173,6 +173,12 @@ class Laser():
             Laser power percentage is limited to between 0 and 100.
         """
         value = float(value)
+        if value <=0:
+            value = 0
+
+        elif value >= 100:
+            value = 100
+
         if 0 <= value <= 100:
             command = "(param-set! '" + self.ID + \
                 ":level " + str(round(value, 2)) + ")\r"
