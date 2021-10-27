@@ -12,7 +12,7 @@ colorama==0.4.1
 coverage==4.5.3
 coveralls==1.7.0
 cycler==0.10.0
-dask==1.2.2
+dask==2021.10.0
 decorator==4.4.0
 defusedxml==0.6.0
 docopt==0.6.2
