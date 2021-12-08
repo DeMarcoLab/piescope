@@ -66,6 +66,7 @@ class Basler():
         elif trigger_mode is 'hardware':
             self.camera.TriggerMode.SetValue('On')
             self.camera.TriggerSource.SetValue('Line4')
+
             self.camera.ExposureMode.SetValue('TriggerWidth')
             self.camera.AcquisitionFrameRateEnable.SetValue(False)
         else:
@@ -92,6 +93,7 @@ class Basler():
         self.camera.Close()
         if flip_image is True:
             self.image = np.flipud(self.image)
+            self.image = np.fliplr(self.image)
         return self.image
 
     def minimum_exposure(self):

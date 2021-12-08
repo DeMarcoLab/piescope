@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
-                       time_delay=1, count_max=5, threshold=5,
-                       detector=None, lasers=None, objective_stage=None):
+                       time_delay=1, count_max=5, threshold=5, phases=1,
+                       angles=1, mode="widefield", detector=None, lasers=None, objective_stage=None):
     """Acquire an image volume using the fluorescence microscope.
 
     Parameters
@@ -39,6 +39,20 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
         Threshold cutoff for deciding whether the current stage position
         is close enough to the target position. Must be a positive number.
         By default 5
+
+    phases : int, optional
+        The number of phases for structured illumination, typically 3.
+        Must be a positive number.
+        By default 1 for widefield imaging
+
+    angles : int, optional
+        The number of angles for structured illumination, typically 3.
+        Must be a positive number.
+        By default 1 for widefield imaging
+
+    mode : str
+        Imaging mode, by default widefield.
+        Possible values are "widefield" and "sim".
 
     detector : piescope.lm.detector.Basler(), optional
         Fluorescence detector class instance.
@@ -68,7 +82,7 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
     total_volume_height = (num_z_slices - 1) * z_slice_distance
 
     pattern_pin = 'P27'
-
+    pattern_on_pin = 'P25'
     # Initialize hardware
     if detector is None:
         detector = piescope.lm.detector.Basler()
@@ -88,7 +102,7 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
     # Create volume array to put the results into
     array_shape = np.shape(detector.camera_grab())  # no lasers on
     volume = np.ndarray(dtype=np.uint8,
-        shape=(num_z_slices, array_shape[0], array_shape[1], len(laser_dict), 9))
+        shape=(len(laser_dict), angles, num_z_slices, phases, array_shape[0], array_shape[1]))
 
     # Acquire volume image
     for z_slice in range(int(num_z_slices)):
@@ -97,10 +111,30 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
             print("z_slice: {}, laser: {}".format(z_slice, laser_name))
             logging.debug("laser_name: {}".format(laser_name))
 
-            for pattern in range(9):
-                volume[z_slice, :, :, channel, pattern] = detector.camera_grab(exposure_time, trigger_mode='hardware',
-                                                                               laser_name=laser_name)
+            if mode == "widefield":
+                piescope.lm.structured.single_line_onoff(True, pattern_on_pin)
+                for phase in range(2):
+                    image = detector.camera_grab(exposure_time, trigger_mode='hardware', laser_name=laser_name)
+                    image = np.fliplr(image)
+                    volume[channel, 1, z_slice, phase, :, :] = image  # (CAZPYX)
+                    piescope.lm.structured.single_line_pulse(10, pattern_pin)
+
+                    #try volume[channel, 1, z_slice, 1, :, :] =
+                    # detector.camera_grab(exposure_time, trigger_mode='hardware', laser_name=laser_name)
+                piescope.lm.structured.single_line_onoff(False, pattern_on_pin)
+
+            else:
+                piescope.lm.structured.single_line_onoff(False, pattern_on_pin)
+                piescope.lm.structured.single_line_onoff(True, pattern_on_pin)
                 piescope.lm.structured.single_line_pulse(10, pattern_pin)
+                for angle in range(angles):
+                    for phase in range(phases):
+                        image = detector.camera_grab(
+                            exposure_time, trigger_mode='hardware', laser_name=laser_name)
+                        volume[channel, angle, z_slice, phase, :, :] = image  # (CAZPYX)
+
+                        piescope.lm.structured.single_line_pulse(10, pattern_pin)
+
 
             # Leftover code, remove when tested
             # Take an image

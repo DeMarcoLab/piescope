@@ -7,6 +7,7 @@ import numpy as np
 import skimage.color
 import skimage.io
 import skimage.util
+import tifffile
 
 
 def save_image(image, destination, metadata={}, *, allow_overwrite=False,
@@ -60,7 +61,7 @@ def save_image(image, destination, metadata={}, *, allow_overwrite=False,
     if allow_overwrite is False:
         while os.path.exists(destination):
             base, ext = os.path.splitext(destination)
-            regex_match = re.search("_\([0-9]*\)$", base)
+            regex_match = re.search("_\\([0-9]*\\)$", base)
             if regex_match:
                 current_idx = int(regex_match.group(0)[2:-1])  # strip "_(" ")"
                 suffix_len = len(regex_match.group(0))
@@ -86,13 +87,21 @@ def save_image(image, destination, metadata={}, *, allow_overwrite=False,
             # Make sure we have the right datatype to svae for ImageJ
             if image.dtype.char not in 'BHhf':  # uint8, uint16, int16, or ?
                 image = skimage.util.img_as_uint(image)  # 16 bit unsigned int
-            # If it's a volume image, must move channel axis before saving
-            if image.ndim == 4:  # (ZYXC)
-                image = np.moveaxis(image, -1, 1)  # move channel axis (ZCYX)
-                metadata.update({'axes':'ZCYX'})
-                skimage.io.imsave(destination, image, imagej=True,
-                    metadata=metadata)
-                logging.debug("Saved: {}".format(destination))
+            # If it's a volume image, must split channels and save individually
+            if image.ndim == 5:  # (AZPYX)
+                tifffile.imwrite(destination, image, bigtiff=True, metadata=metadata)
+
+
+            if image.ndim == 6:  #(CAZPYX) --> (AZPYX)
+                volume_split = np.zeros(image.shape)
+                for i in range(image.shape[1]):
+                    volume_split[:, i] = image[:, i]
+                    metadata.update('axes:AZPYX')
+                    destination = destination.replace('.tif', '') + '_channel_' + str(i) + '.tif'
+                    logging.debug("Saved: {}".format(destination))
+                    tifffile.imwrite(destination, volume_split[:, i], bigtiff=True,
+                                     metadata=metadata)
+
             if image.ndim == 3:  # (YXC)
                 image = np.moveaxis(image, -1, 0)  # move channel axis (CYX)
                 metadata.update({'axes':'CYX'})
@@ -124,6 +133,15 @@ def max_intensity_projection(image, start_slice=0, end_slice=None):
     projected_max_intensity
         numpy array
     """
+    results = []
+    # if image.ndim == 6:  #CAZPYX
+    #
+    #     for channel_image in image:
+    #         max_intensity = np.max(channel_image, axis=(0, 2))
+    #         results.append(max_intensity)
+    #     projected_max_intensity = np.stack(results, axis=0)
+    #
+    #
     # Check input validity
     if image.ndim != 4:
         raise ValueError("expecting numpy.array with dimensions "
@@ -134,7 +152,7 @@ def max_intensity_projection(image, start_slice=0, end_slice=None):
     else:
         image = image[start_slice:end_slice, ...]
     image = np.moveaxis(image, -1, 0)
-    results = []
+
     for channel_image in image:
         max_intensity = np.max(channel_image, axis=0)
         results.append(max_intensity)
@@ -167,7 +185,8 @@ def rgb_image(image):
                          "Expected an image with 2 or 3 dimensions, "
                          "but found {} dimensions".format(image.ndim))
     if image.ndim == 2:
-        rgb_image = skimage.color.gray2rgb(image)
+        rgb_image = image
+        # rgb_image = skimage.color.gray2rgb(image)
         return rgb_image
     elif image.ndim == 3:
         if image.shape[-1] == 1:

@@ -40,7 +40,7 @@ class StageController(socket.socket):
         if not testing:
             # try:
             self.connect((host, port))
-            print('Successfully connected to SMARACT objective lens stage')
+            print('Successfully connected to SMARACT objective lens stage controller')
             # except socket.timeout:
             #     # handle the timeout
             # except Exception as e:
