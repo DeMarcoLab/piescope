@@ -4,6 +4,8 @@
 import nidaqmx
 import time
 from nidaqmx.constants import (LineGrouping)
+import threading
+from pipython import
 
 LINES = {'P00': 'Dev1/port0/line0',
          'P01': 'Dev1/port0/line1',
@@ -59,3 +61,34 @@ def single_line_onoff(onoff, pin):
         LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES)
     task.write(onoff)
     task.close()
+
+
+def read_line(pin):
+    task = nidaqmx.Task()
+    task.di_channels.add_di_chan(
+        LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES
+    )
+
+    data = task.read()
+    while not data:
+        data = task.read()
+    while data:
+        data = task.read()
+    task.close()
+
+
+# single_line_onoff(onoff=True, pin='P03')
+# read_line('P06')
+# single_line_onoff(onoff=True, pin='P03')
+# read_line('P06')
+# single_line_onoff(onoff=True, pin='P03')
+# read_line('P06')
+
+
+def live_structured_worker(stop_event, run_time):
+    pass
+
+def continuous_reading(run_time):
+    stop_event = threading.Event()
+    _thread = threading.Thread(target=live_structured_worker, args=(stop_event, run_time))
+    _thread.start()
