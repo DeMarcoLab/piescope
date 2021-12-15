@@ -5,7 +5,6 @@ import nidaqmx
 import time
 from nidaqmx.constants import (LineGrouping)
 import threading
-from pipython import
 
 LINES = {'P00': 'Dev1/port0/line0',
          'P01': 'Dev1/port0/line1',
