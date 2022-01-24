@@ -91,18 +91,17 @@ def save_image(image, destination, metadata={}, *, allow_overwrite=False,
             if image.ndim == 5:  # (AZPYX)
                 tifffile.imwrite(destination, image, bigtiff=True, metadata=metadata)
 
-
-            if image.ndim == 6:  #(CAZPYX) --> (AZPYX)
+            elif image.ndim == 6:  #(CAZPYX) --> (AZPYX)
                 volume_split = np.zeros(image.shape)
                 for i in range(image.shape[1]):
                     volume_split[:, i] = image[:, i]
-                    metadata.update('axes:AZPYX')
+                    metadata.update({'axes': 'AZPYX'})
                     destination = destination.replace('.tif', '') + '_channel_' + str(i) + '.tif'
                     logging.debug("Saved: {}".format(destination))
                     tifffile.imwrite(destination, volume_split[:, i], bigtiff=True,
                                      metadata=metadata)
 
-            if image.ndim == 3:  # (YXC)
+            elif image.ndim == 3:  # (YXC)
                 image = np.moveaxis(image, -1, 0)  # move channel axis (CYX)
                 metadata.update({'axes':'CYX'})
                 skimage.io.imsave(destination, image, imagej=True,
@@ -134,29 +133,30 @@ def max_intensity_projection(image, start_slice=0, end_slice=None):
         numpy array
     """
     results = []
-    # if image.ndim == 6:  #CAZPYX
-    #
-    #     for channel_image in image:
-    #         max_intensity = np.max(channel_image, axis=(0, 2))
-    #         results.append(max_intensity)
-    #     projected_max_intensity = np.stack(results, axis=0)
-    #
-    #
-    # Check input validity
-    if image.ndim != 4:
-        raise ValueError("expecting numpy.array with dimensions "
-                         "(pln, row, col, ch)")
-    # Slice image stack
-    if end_slice is None:
-        image = image[start_slice:, ...]
-    else:
-        image = image[start_slice:end_slice, ...]
-    image = np.moveaxis(image, -1, 0)
+    # TODO: make this consistent
+    if image.ndim == 6:  #CAZPYX
 
-    for channel_image in image:
-        max_intensity = np.max(channel_image, axis=0)
-        results.append(max_intensity)
-    projected_max_intensity = np.stack(results, axis=-1)
+        for channel_image in image:
+            max_intensity = np.max(channel_image, axis=(0, 1, 2))
+            results.append(max_intensity)
+        projected_max_intensity = np.stack(results, axis=-1)
+
+    # Check input validity
+    else:
+        if image.ndim != 4:
+            raise ValueError("expecting numpy.array with dimensions "
+                             "(pln, row, col, ch)")
+            # Slice image stack
+        if end_slice is None:
+            image = image[start_slice:, ...]
+        else:
+            image = image[start_slice:end_slice, ...]
+        image = np.moveaxis(image, -1, 0)
+
+        for channel_image in image:
+            max_intensity = np.max(channel_image, axis=0)
+            results.append(max_intensity)
+        projected_max_intensity = np.stack(results, axis=-1)
     return projected_max_intensity
 
 

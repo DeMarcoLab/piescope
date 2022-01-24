@@ -24,8 +24,8 @@ _laser_name_to_id = {i[0]: i[1] for i in _available_lasers}
 _laser_id_to_name = {i[1]: i[0] for i in _available_lasers}
 
 
-def initialize_lasers(serial_port=None):
-    """Initialize all available lasers.
+def initialise_lasers(serial_port=None):
+    """Initialise all available lasers.
 
     Parameters
     ----------

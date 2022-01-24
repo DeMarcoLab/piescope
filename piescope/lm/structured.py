@@ -38,7 +38,7 @@ def single_line_pulse(delay, pin):
     task.do_channels.add_do_chan(
         LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES)
     task.write(True)
-    time.sleep(delay/1e6)
+    time.sleep(delay/1e6)  # us to s
     task.write(False)
     task.close()
 
@@ -48,8 +48,9 @@ def multi_line_pulse(delay, *pins):
     for pin in pins:
         task.do_channels.add_do_chan(
             LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES)
+    task.write([False]*len(pins))
     task.write([True]*len(pins))
-    time.sleep(delay/1e6)
+    time.sleep(delay/1e6)  # us to s
     task.write([False]*len(pins))
     task.close()
 
@@ -63,22 +64,36 @@ def single_line_onoff(onoff, pin):
 
 
 def read_line(pin):
+    timeout = 3
+    start_time = time.time()
     task = nidaqmx.Task()
     task.di_channels.add_di_chan(
         LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES
     )
 
+    triggered = False
+
     data = task.read()
-    while not data:
+    while not triggered:
         data = task.read()
+        if data:
+            triggered = True
+        if time.time() >= start_time + timeout:
+            print('Stage settling timed out')
+            break
+
     while data:
         data = task.read()
+        if time.time() >= start_time + timeout:
+            print('Stage settling timed out')
+            break
     task.close()
 
 
-# single_line_onoff(onoff=True, pin='P03')
-# read_line('P06')
-# single_line_onoff(onoff=True, pin='P03')
+# single_line_pulse(3e6, 'P02')
+# multi_line_pulse(3e6, 'P14', 'P13')
+# read_line('P13')
+# a# single_line_onoff(onoff=True, pin='P05')
 # read_line('P06')
 # single_line_onoff(onoff=True, pin='P03')
 # read_line('P06')
@@ -86,6 +101,7 @@ def read_line(pin):
 
 def live_structured_worker(stop_event, run_time):
     pass
+
 
 def continuous_reading(run_time):
     stop_event = threading.Event()

@@ -6,6 +6,8 @@ import piescope.lm.detector
 import piescope.lm.laser
 import piescope.lm.objective
 import piescope.lm.structured
+import piescope.lm.mirror
+from piescope.lm.mirror import StagePosition, StageMacro
 
 
 logger = logging.getLogger(__name__)
@@ -13,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
                        time_delay=1, count_max=5, threshold=5, phases=1,
-                       angles=1, mode="widefield", detector=None, lasers=None, objective_stage=None):
+                       angles=1, mode="widefield", detector=None, lasers=None,
+                       objective_stage=None, mirror_controller=None, arduino=None, laser_pins=None):
     """Acquire an image volume using the fluorescence microscope.
 
     Parameters
@@ -66,6 +69,15 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
         Objective lens stage class instance.
         Default value is None.
 
+    mirror_controller : piescope.lm.mirror.PIController(), optional
+        Stage controller for structured pattern mirror.
+        Default value is None.
+
+    laser_pins : list of str
+        Pin names to trigger pins via hardware.
+        Individual names passed as 'PXX', with XX being the port and pin number, respectively
+        Default values is None.
+
     Returns
     -------
     volume : multidimensional numpy array
@@ -81,17 +93,17 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
     z_slice_distance = int(z_slice_distance)
     total_volume_height = (num_z_slices - 1) * z_slice_distance
 
-    pattern_pin = 'P27'
-    pattern_on_pin = 'P25'
     # Initialize hardware
     if detector is None:
         detector = piescope.lm.detector.Basler()
-    # if lasers is None:
-    #     lasers = piescope.lm.laser.initialize_lasers()
+    if lasers is None:
+        lasers = piescope.lm.laser.initialize_lasers()
     if objective_stage is None:
         objective_stage = piescope.lm.objective.StageController()
-    # for laser_name, (laser_power, exposure_time) in laser_dict.items():
-    #     lasers[laser_name].laser_power = laser_power
+    for laser_name, (laser_power, exposure_time) in laser_dict.items():
+        lasers[laser_name].laser_power = laser_power
+    if mirror_controller is None:
+        mirror_controller = piescope.lm.mirror.PIController()
 
     # Move objective lens stage to the top of the volume
     original_center_position = str(objective_stage.current_position())
@@ -99,66 +111,72 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
     time.sleep(time_delay)  # Pause to be sure movement is completed
     logger.debug('Objective lens stage moved to top of the image volume.')
 
+    if mode != 'widefield':
+        angles = 3
+        phases = 3
+
     # Create volume array to put the results into
     array_shape = np.shape(detector.camera_grab())  # no lasers on
     volume = np.ndarray(dtype=np.uint8,
         shape=(len(laser_dict), angles, num_z_slices, phases, array_shape[0], array_shape[1]))
 
     # Acquire volume image
+    # For each slice
     for z_slice in range(int(num_z_slices)):
         logging.debug("z_slice: {}".format(z_slice))
-        for channel, (laser_name, (laser_power, exposure_time)) in enumerate(laser_dict.items()):
-            print("z_slice: {}, laser: {}".format(z_slice, laser_name))
-            logging.debug("laser_name: {}".format(laser_name))
 
-            if mode == "widefield":
-                piescope.lm.structured.single_line_onoff(True, pattern_on_pin)
-                for phase in range(2):
-                    image = detector.camera_grab(exposure_time, trigger_mode='hardware', laser_name=laser_name)
-                    image = np.fliplr(image)
-                    volume[channel, 1, z_slice, phase, :, :] = image  # (CAZPYX)
-                    piescope.lm.structured.single_line_pulse(10, pattern_pin)
+        if mode == "widefield":
+            mirror_controller.stopAll()
+            mirror_controller.move_to(StagePosition.WIDEFIELD)
+            for channel, (laser_name, (laser_power, exposure_time)) in enumerate(laser_dict.items()):
+                print("z_slice: {}, laser: {}".format(z_slice, laser_name))
+                logging.debug("laser_name: {}".format(laser_name))
 
-                    #try volume[channel, 1, z_slice, 1, :, :] =
-                    # detector.camera_grab(exposure_time, trigger_mode='hardware', laser_name=laser_name)
-                piescope.lm.structured.single_line_onoff(False, pattern_on_pin)
+                image = detector.camera_grab(exposure_time, trigger_mode='hardware', laser_name=laser_name, laser_pins=laser_pins)
+                image = np.fliplr(image)
+                volume[channel, 0, z_slice, 0, :, :] = image  # (CAZPYX)
 
-            else:
-                piescope.lm.structured.single_line_onoff(False, pattern_on_pin)
-                piescope.lm.structured.single_line_onoff(True, pattern_on_pin)
-                piescope.lm.structured.single_line_pulse(10, pattern_pin)
+        else:
+            # n_images = angles * phases * len(laser_dict)
+            slice = detector.grab_slice(mirror_controller=mirror_controller, arduino=arduino, laser_dict=laser_dict)
+
+
+            slice_reshaped = np.array(slice).reshape(len(laser_dict), angles, phases, array_shape[0], array_shape[1])
+            # assert slice_reshaped.shape == ()
+
+            img_index = list(range(len(slice)))
+            for channel in range(len(laser_dict)):
                 for angle in range(angles):
                     for phase in range(phases):
-                        image = detector.camera_grab(
-                            exposure_time, trigger_mode='hardware', laser_name=laser_name)
-                        volume[channel, angle, z_slice, phase, :, :] = image  # (CAZPYX)
+                        # get the index for each parameters image in the slice
+                        # see notebook for details
+                        idx = img_index[channel::len(laser_dict)][angle::angles][phase::phases][0]
+                        # idx = test[a::N_LASERS][b::N_ANGLES][c::N_PHASES]
+                        slice_reshaped[channel, angle, phase] = slice[idx]
 
-                        piescope.lm.structured.single_line_pulse(10, pattern_pin)
+            # Channel, then phase, then angle
+            volume[:, :, z_slice, :, :, :] = slice_reshaped  # (CAZPYX)
 
-
-            # Leftover code, remove when tested
-            # Take an image
-            # lasers[laser_name].emission_on()
-            # lasers[laser_name].emission_off()
-
-            # Move objective lens stage
-            target_position = (float(original_center_position)
-                               + float(total_volume_height / 2.)
-                               - (float(z_slice) * float(z_slice_distance))
-                               )
-            objective_stage.move_relative(-int(z_slice_distance))
-            time.sleep(time_delay)  # Pause to be sure movement is completed.
-            # If objective stage movement not accurate enough, try it again
-            count = 0
+        # Move objective lens stage
+        target_position = (float(original_center_position)
+                           + float(total_volume_height / 2.)
+                           - (float(z_slice) * float(z_slice_distance))
+                           )
+        objective_stage.move_relative(-int(z_slice_distance))
+        time.sleep(time_delay)  # Pause to be sure movement is completed.
+        # If objective stage movement not accurate enough, try it again
+        count = 0
+        current_position = float(objective_stage.current_position())
+        difference = current_position - target_position
+        while count < count_max and abs(difference) > threshold:
+            objective_stage.move_relative(-int(difference))
+            time.sleep(time_delay)  # Pause to be sure movement completed.
             current_position = float(objective_stage.current_position())
             difference = current_position - target_position
-            while count < count_max and abs(difference) > threshold:
-                objective_stage.move_relative(-int(difference))
-                time.sleep(time_delay)  # Pause to be sure movement completed.
-                current_position = float(objective_stage.current_position())
-                difference = current_position - target_position
-                logger.debug('Difference is: {}'.format(str(difference)))
-                count = count + 1
+            logger.debug('Difference is: {}'.format(str(difference)))
+            count = count + 1
+        piescope.lm.structured.single_line_pulse(100000, 'P04')
+        # TODO: add to pins in main
 
     # Finally, return the objective lens stage too original position
     objective_stage.move_absolute(original_center_position)
