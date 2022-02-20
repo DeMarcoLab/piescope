@@ -3,10 +3,11 @@ from enum import Enum, auto
 
 
 class StagePosition(Enum):
-    WIDEFIELD = [3, 3]
-    HORIZONTAL = [2, -3]
-    SIXTY = [-3, -3]
+    WIDEFIELD = [2, -3]
+    HORIZONTAL = [-3, -3]
+    SIXTY = [3, 3]
     ONETWENTY = [-2, 2]
+
 
 
 class StageMacro(Enum):
