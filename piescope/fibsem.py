@@ -4,8 +4,8 @@ import numpy as np
 """Module for interacting with the FIBSEM using Autoscript."""
 
 
-def initialize(ip_address='10.0.0.1'):
-    """Initialize connection to FIBSEM microscope with Autoscript."""
+def initialise(ip_address='10.0.0.1'):
+    """Initialise connection to FIBSEM microscope with Autoscript."""
     from autoscript_sdb_microscope_client import SdbMicroscopeClient
     microscope = SdbMicroscopeClient()
     microscope.connect(ip_address)

@@ -93,7 +93,7 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
     z_slice_distance = int(z_slice_distance)
     total_volume_height = (num_z_slices - 1) * z_slice_distance
 
-    # Initialize hardware
+    # Initialise hardware
     if detector is None:
         detector = piescope.lm.detector.Basler()
     if lasers is None:

@@ -55,7 +55,7 @@ class StageController(socket.socket):
     def initialise_system_parameters(self, relative_accumulation=0,
                                      reference_mark=0, reference_hold=1000,
                                      start_position=0):
-        """Initialize the fluorescence objective lens stage controller.
+        """Initialise the fluorescence objective lens stage controller.
 
         Parameters
         ----------
