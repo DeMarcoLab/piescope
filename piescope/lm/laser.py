@@ -15,10 +15,8 @@ class Laser:
     enabled: bool
 
 
-class Laser_Controller:
-    def __init__(self, config_path):
-
-        settings = utils.read_config(config_path)
+class LaserController:
+    def __init__(self, settings):
 
         self.lasers = {}
         self.serial_connection = utils.connect_serial_port(settings)
