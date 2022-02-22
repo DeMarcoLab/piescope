@@ -2,12 +2,16 @@ from datetime import datetime
 import logging
 import os
 import re
+import yaml
 
 import numpy as np
 import skimage.color
 import skimage.io
 import skimage.util
 import tifffile
+import serial
+import serial.tools.list_ports
+import warnings
 
 
 def save_image(image, destination, metadata={}, *, allow_overwrite=False,
@@ -207,3 +211,51 @@ def rgb_image(image):
              raise ValueError("Wrong number of image channels! "
                               "Expected up to 3 image channels, "
                               "but found {} channels.".format(image.shape[-1]))
+
+
+def read_config(config_filename):
+    with open(config_filename, "r") as file:
+        settings_dict = yaml.safe_load(file)
+    return settings_dict
+
+
+
+
+def connect_serial_port(settings):
+    """Serial port for communication with the lasers.
+
+    Parameters
+    ----------
+    port : str, optional
+        Serial port device name, by default 'COM3'.
+    baudrate : int, optional
+        Rate of communication, by default 115200 bits per second.
+    timeout : int, optional
+        Timeout period, by default 1 second.
+
+    Returns
+    -------
+    pyserial Serial() object
+        Serial port for communication with the lasers.
+    """
+
+    _available_serial_ports = serial.tools.list_ports.comports()
+    _available_port_names = [port.device for port in _available_serial_ports]
+
+    port = settings['serial']['port']
+    baudrate = settings['serial']['baudrate']
+    timeout = settings['serial']['timeout']
+
+    if port not in _available_port_names:
+        warnings.warn(
+            "Default laser serial port not available.\n"
+            "Fall back to port {}".format()
+        )
+        port = _available_port_names[0]
+    return serial.Serial(port, baudrate=baudrate, timeout=timeout)
+
+def write_serial_command(serial_connection, command):
+    serial_connection.close()
+    serial_connection.open()
+    serial_connection.write(bytes(command, 'utf-8'))
+    serial_connection.close()

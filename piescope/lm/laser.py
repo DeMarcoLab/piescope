@@ -1,27 +1,13 @@
 """Module for laser control via serial communication."""
-import collections
-import time
+import os
 import warnings
+from dataclasses import dataclass
 
-import time
-import warnings
+import numpy as np
+import piescope
+from piescope import utils
 
-import serial
-import serial.tools.list_ports
-
-DEFAULT_SERIAL_PORT = 'COM3'  # default laser serial communication port
-_available_serial_ports = serial.tools.list_ports.comports()
-_available_port_names = [port.device for port in _available_serial_ports]
-_available_lasers = (("laser640", "laser1", 640),  # (far-red)
-                     ("laser561", "laser2", 561),  # (RFP)
-                     ("laser488", "laser3", 488),  # (GFP)
-                     ("laser405", "laser4", 405))  # (DAPI)
-_laser_name_to_wavelength = {i[0]: i[2] for i in _available_lasers}
-_laser_wavelength_to_name = {i[2]: i[0] for i in _available_lasers}
-_laser_wavelength_to_id = {i[2]: i[1] for i in _available_lasers}
-_laser_id_to_wavelength = {i[1]: i[2] for i in _available_lasers}
-_laser_name_to_id = {i[0]: i[1] for i in _available_lasers}
-_laser_id_to_name = {i[1]: i[0] for i in _available_lasers}
+config_path = os.path.join(os.path.dirname(piescope.__file__), "config.yml")
 
 
 def initialise_lasers(serial_port=None):
@@ -41,156 +27,184 @@ def initialise_lasers(serial_port=None):
         try:
             serial_port = connect_serial_port()
         except Exception:
-            warnings.warn('Default laser serial port not available.\n'
-                          'Fall back to {}'.format(_available_port_names[0]))
+            warnings.warn(
+                "Default laser serial port not available.\n"
+                "Fall back to {}".format(_available_port_names[0])
+            )
             serial_port = connect_serial_port(_available_port_names[0])
-    all_lasers = {name: Laser(name, serial_port)
-                  for name in list(_laser_name_to_wavelength)}
+    all_lasers = {
+        laser["name"]: Laser(laser["name"], serial_port) for laser in _available_lasers
+    }
     return all_lasers
 
 
-def connect_serial_port(port=DEFAULT_SERIAL_PORT, baudrate=115200, timeout=1):
-    """Serial port for communication with the lasers.
-
-    Parameters
-    ----------
-    port : str, optional
-        Serial port device name, by default 'COM6'.
-    baudrate : int, optional
-        Rate of communication, by default 115200 bits per second.
-    timeout : int, optional
-        Timeout period, by default 1 second.
-
-    Returns
-    -------
-    pyserial Serial() object
-        Serial port for communication with the lasers.
-    """
-    if port == DEFAULT_SERIAL_PORT:
-        if DEFAULT_SERIAL_PORT not in _available_port_names:
-            warnings.warn('Default laser serial port not available.\n'
-                          'Fall back to port {}'.format())
-            port = _available_port_names[0]
-    return serial.Serial(port, baudrate=baudrate, timeout=timeout)
+@dataclass
+class Laser:
+    name: str
+    serial_id: str
+    wavelength: float
+    power: float
+    exposure_time: float  # us
+    enabled: bool
 
 
-class Laser():
-    """Laser class."""
+class Laser_Controller:
+    def __init__(self):
 
-    def __init__(self, name, serial_port, laser_power=0.,
-                 exposure_time=0., selected=False):
-        """Initialize instance of Laser class. Laser enabled by default.
+        settings = utils.read_config(config_path)
 
-        Parameters
-        ----------
-        name : str
-            Laser name string for serial communication.
-            Available options:
-            * "laser640" with wavelength 640nm (far-red)
-            * "laser561" with wavelength 561nm (RFP)
-            * "laser488" with wavelength 488nm (GFP)
-            * "laser405" with wavelength 405nm (DAPI)
-        serial_port : pyserial Serial() object
-            Serial communication port for the laser.
-        laser_power : float, optional
-            Laser power percentage, by default 1%.
-        exposure_time : float
-            Feature request from our users - sometimes they want the ability
-            to set different exposure times (as well as different laser powers)
-            for different wavelengths.
-        selected - bool
-            Whether the laser currently selected.
-            Eg: For use a volume acquisition later on, etc.
-        """
-        self.NAME = name
-        self.ID = _laser_name_to_id[self.NAME]
-        self.WAVELENGTH = _laser_name_to_wavelength[self.NAME]
-        self.SERIAL_PORT = serial_port
-        self.laser_power = laser_power
-        self.exposure_time = exposure_time
-        self.selected = selected
-        self.enable()
+        self.lasers = {}
+        self.serial_connection = utils.connect_serial_port(settings)
 
-    def emission_on(self):
-        """Start emitting laser light"""
-        command_turn_on = "(param-set! '" + self.ID + ":cw #t)\r"
-        self._write_serial_command(command_turn_on)
-        return command_turn_on
+        # grab available lasers
+        for laser in settings["lasers"]:
+            current_laser = Laser(
+                name=laser["name"],
+                serial_id=laser["ID"],
+                wavelength=laser["wavelength"],
+                power=0.0,
+                exposure_time=0.0,
+                enabled=False,
+            )
+            self.lasers[current_laser.name] = current_laser
 
-    def emission_off(self):
-        """Stop emitting laser light"""
-        command_turn_off = "(param-set! '" + self.ID + ":cw #f)\r"
-        self._write_serial_command(command_turn_off)
-        return command_turn_off
+        # set initial laser values
+        for laser in self.lasers.values():
+            self.enable(laser)
+            self.set_laser_power(laser, laser.power)
+            self.set_exposure_time(laser, laser.exposure_time)
+            self.emission_on(laser)
+            import time
 
-    def enable(self):
-        """Enable the laser.
+            time.sleep(1)
+            self.emission_off(laser)
 
-        Returns
-        -------
-        str
-            Serial command to enable the laser.
-        """
-        command = "(param-set! '" + self.ID + ":enable #t)\r"
-        self._write_serial_command(command)
-        self.enabled = True
-        return command
-
-    def disable(self):
-        """Disable the laser.
-
-        Returns
-        -------
-        str
-            Serial command to disable the laser.
-        """
-        command = "(param-set! '" + self.ID + ":enable #f)\r"
-        self._write_serial_command(command)
-        self.enabled = False
-        return command
-
-    @property
-    def laser_power(self):
-        return self._laser_power
-
-    @laser_power.setter
-    def laser_power(self, value):
-        """Laser power percentage.
+    def set_laser_power(self, laser: Laser, power: float) -> None:
+        """sets power level of laser
 
         Parameters
         ----------
-        value : int or float
-            Laser power percentage.
-
-        Returns
-        -------
-        str
-            Serial command to set the laser power percentage.
+        laser : Laser
+            laser to set the power level of
+        power : float
+            percentage of total power to set
 
         Raises
         ------
-        ValueError
-            Laser power percentage is limited to between 0 and 100.
+        TypeError
+            Laser power percentage must be a float
         """
-        value = float(value)
-        if value <=0:
-            value = 0
+        if not isinstance(power, float):
+            raise TypeError(f"Power must be a float. {type(power)} was passed.")
 
-        elif value >= 100:
-            value = 100
+        power = np.clip(power, 0.0, 100.0)
+        command = (
+            "(param-set! '" + laser.serial_id + ":level " + str(round(power, 2)) + ")\r"
+        )
+        utils.write_serial_command(self.serial_connection, command)
+        laser.power = power
 
-        if 0 <= value <= 100:
-            command = "(param-set! '" + self.ID + \
-                ":level " + str(round(value, 2)) + ")\r"
-            self._write_serial_command(command)
-            self._laser_power = value
-        else:
-            raise ValueError('Laser power percentage must be between 0 - 100')
-        return command
+    def get_laser_power(self, laser: Laser) -> float:
+        """returns the laser power
 
-    def _write_serial_command(self, command):
-        self.SERIAL_PORT.close()
-        self.SERIAL_PORT.open()
-        bytelength = self.SERIAL_PORT.write(bytes(command, 'utf-8'))
-        self.SERIAL_PORT.close()
-        return bytelength
+        Parameters
+        ----------
+        laser : Laser
+            laser to get the power level of
+
+        Returns
+        -------
+        float
+            laser power as percentage of total
+        """
+        return laser.power
+
+    def set_exposure_time(self, laser: Laser, exposure_time: float) -> None:
+        """sets exposure time of laser
+
+        Parameters
+        ----------
+        laser : Laser
+            laser to set the exposure time of
+        exposure time : float
+             exposure time to set in microseconds
+
+        Raises
+        ------
+        TypeError
+            Laser power percentage must be a float
+        """
+        if not isinstance(exposure_time, float):
+            raise TypeError(
+                f"Exposure time must be a float. {type(exposure_time)} was passed."
+            )
+
+        exposure_time = np.clip(
+            exposure_time, 0.0, 10.0e6
+        )  # unable to reverse the flow of time
+        laser.exposure_time = exposure_time
+
+    def get_exposure_time(self, laser: Laser) -> float:
+        """returns the exposure time for the laser
+
+        Parameters
+        ----------
+        laser : Laser
+            laser to get the exposure time of
+
+        Returns
+        -------
+        float
+            exposure time
+        """
+        return laser.exposure_time
+
+    def enable(self, laser: Laser) -> None:
+        """enables the laser using serial commands.
+        See documentation file for command structure.
+
+        Parameters
+        ----------
+        laser : Laser
+            the laser to enable
+
+        """
+        command = "(param-set! '" + laser.serial_id + ":enable #t)\r"
+        utils.write_serial_command(self.serial_connection, command)
+        laser.enabled = True
+
+    def disable(self, laser: Laser) -> None:
+        """disables the laser using serial commands.
+        See documentation file for command structure.
+
+        Parameters
+        ----------
+        laser : Laser
+            the laser to disable
+
+        """
+        command = "(param-set! '" + laser.serial_id + ":enable #f)\r"
+        utils.write_serial_command(self.serial_connection, command)
+        laser.enabled = True
+
+    def emission_on(self, laser: Laser) -> None:
+        """turn on the laser
+
+        Parameters
+        ----------
+        laser : Laser
+            the laser to turn on
+        """
+        command = "(param-set! '" + laser.serial_id + ":cw #t)\r"
+        utils.write_serial_command(self.serial_connection, command)
+
+    def emission_off(self, laser: Laser) -> None:
+        """turn off the laser
+
+        Parameters
+        ----------
+        laser : Laser
+            the laser to turn off
+        """
+        command = "(param-set! '" + laser.serial_id + ":cw #f)\r"
+        utils.write_serial_command(self.serial_connection, command)
