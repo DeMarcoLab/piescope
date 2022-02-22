@@ -1,4 +1,5 @@
 """Module for laser control via serial communication."""
+from wsgiref.simple_server import demo_app
 from dataclasses import dataclass
 
 import numpy as np
@@ -22,7 +23,7 @@ class LaserController:
         self.serial_connection = utils.connect_serial_port(settings)
 
         # grab available lasers
-        for laser in settings["lasers"]:
+        for laser in settings["lm"]["lasers"]:
             current_laser = Laser(
                 name=laser["name"],
                 serial_id=laser["ID"],
@@ -39,11 +40,14 @@ class LaserController:
             self.set_laser_power(laser, laser.power)
             self.set_exposure_time(laser, laser.exposure_time)
             self.emission_on(laser)
-            import time
 
-            time.sleep(1)
-            self.emission_off(laser)
+        default_laser = settings['lm']['default_laser']
+        if default_laser not in self.lasers:
+            raise ValueError(f"Default laser set in config not found in available lasers.  Default laser is {default_laser}")
 
+        self.current_laser = self.lasers[default_laser]
+        print(self.current_laser)
+        
     def set_laser_power(self, laser: Laser, power: float) -> None:
         """sets power level of laser
 

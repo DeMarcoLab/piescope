@@ -5,20 +5,22 @@ serial:
   port: 'COM15'
   baudrate: 115200
   timeout: 1
-lasers:
-- name: laser405
-  wavelength: 405 # nm
-  pin: P00
-  ID: laser4
-- name: laser488
-  wavelength: 488 # nm
-  pin: P01
-  ID: laser3
-- name: laser561
-  wavelength: 561 # nm
-  pin: P02
-  ID: laser2
-- name: laser640
-  wavelength: 640 # nm
-  pin: P03
-  ID: laser1
+lm:
+  default_laser: laser488
+  lasers:
+  - name: laser405
+    wavelength: 405 # nm
+    pin: P00
+    ID: laser4
+  - name: laser488
+    wavelength: 488 # nm
+    pin: P01
+    ID: laser3
+  - name: laser561
+    wavelength: 561 # nm
+    pin: P02
+    ID: laser2
+  - name: laser640
+    wavelength: 640 # nm
+    pin: P03
+    ID: laser1
