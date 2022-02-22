@@ -1,13 +1,9 @@
 """Module for laser control via serial communication."""
-import os
-import warnings
 from dataclasses import dataclass
 
 import numpy as np
-import piescope
 from piescope import utils
 
-config_path = os.path.join(os.path.dirname(piescope.__file__), "config.yml")
 
 @dataclass
 class Laser:
@@ -20,7 +16,7 @@ class Laser:
 
 
 class Laser_Controller:
-    def __init__(self):
+    def __init__(self, config_path):
 
         settings = utils.read_config(config_path)
 
