@@ -18,8 +18,8 @@ def dummy_laser():
     return laser.Laser("laser640", SerialTestClass(), laser_power=1.)
 
 
-def test_initialize_lasers():
-    output = laser.initialize_lasers(serial_port=SerialTestClass())
+def test_initialise_lasers():
+    output = laser.initialise_lasers(serial_port=SerialTestClass())
     assert len(output) == 4
     assert output["laser405"].NAME == "laser405"
     assert output["laser405"].WAVELENGTH == 405

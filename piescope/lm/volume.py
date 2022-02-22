@@ -97,7 +97,7 @@ def volume_acquisition(laser_dict, num_z_slices, z_slice_distance,
     if detector is None:
         detector = piescope.lm.detector.Basler()
     if lasers is None:
-        lasers = piescope.lm.laser.initialize_lasers()
+        lasers = piescope.lm.laser.initialise_lasers()
     if objective_stage is None:
         objective_stage = piescope.lm.objective.StageController()
     for laser_name, (laser_power, exposure_time) in laser_dict.items():
