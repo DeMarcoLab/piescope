@@ -9,35 +9,6 @@ from piescope import utils
 
 config_path = os.path.join(os.path.dirname(piescope.__file__), "config.yml")
 
-
-def initialise_lasers(serial_port=None):
-    """Initialise all available lasers.
-
-    Parameters
-    ----------
-    serial_port : pyserial Serial() object, optional
-        Serial port for communication with the lasers.
-
-    Returns
-    -------
-    dict
-        Dictionary of Laser() objects for all available lasers.
-    """
-    if serial_port is None:
-        try:
-            serial_port = connect_serial_port()
-        except Exception:
-            warnings.warn(
-                "Default laser serial port not available.\n"
-                "Fall back to {}".format(_available_port_names[0])
-            )
-            serial_port = connect_serial_port(_available_port_names[0])
-    all_lasers = {
-        laser["name"]: Laser(laser["name"], serial_port) for laser in _available_lasers
-    }
-    return all_lasers
-
-
 @dataclass
 class Laser:
     name: str
