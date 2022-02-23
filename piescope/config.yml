@@ -2,7 +2,7 @@ system:
   ip_address: 10.0.0.1
   offline_mode: True
 serial:
-  port: 'COM15'
+  port: 'COM3'
   baudrate: 115200
   timeout: 1
 lm:

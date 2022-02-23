@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import os
+from pathlib import Path
 import re
 import yaml
 
@@ -13,7 +14,9 @@ import serial
 import serial.tools.list_ports
 import warnings
 from enum import Enum
-
+    
+from autoscript_sdb_microscope_client.structures import \
+    AdornedImage
 
 class TriggerMode(Enum):
     Hardware = 0
@@ -24,6 +27,24 @@ class Modality(Enum):
     Light = 0
     Ion = 1
     Electron = 2
+
+def load_image(filename: Path, adorned: bool = True):
+    
+    # check file
+    if not os.path.exists(filename):
+        raise FileNotFoundError("File not found")
+
+    # open file
+    if adorned:
+        image = AdornedImage.load(filename)
+        try:
+            image.metadata.binary_result.pixel_size.x
+        except AttributeError:
+            raise AttributeError("Image must be AdornedImage type")
+    else:
+        image = skimage.io.imread(filename)
+
+    return image
 
 
 def save_image(image, destination, metadata={}, *, allow_overwrite=False,

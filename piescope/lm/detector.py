@@ -70,8 +70,8 @@ class Basler():
             grabResult.Release()
 
         self.camera.Close()
-        image = np.flipud(self.image)
-        image = np.fliplr(self.image)
+        image = np.flipud(image)
+        image = np.fliplr(image)
         return image
 
 
