@@ -1,13 +1,11 @@
 """Module for the Basler fluorescence detector."""
-import sys
-
 import numpy as np
-
+from piescope.lm import structured
+from piescope.lm.laser import Laser
+from piescope.lm.mirror import StageMacro
 from pypylon import pylon
 
-import piescope.lm.mirror
-from piescope.lm.mirror import StagePosition, StageMacro
-from piescope.lm import structured
+from piescope.utils import TriggerMode
 
 
 class Basler():
@@ -23,7 +21,61 @@ class Basler():
         self.image = []
         self.camera_pin = 'P14'
 
-    def camera_grab(self, exposure_time=None, trigger_mode='software', flip_image=True, laser_name=None, laser_pins=None):
+    def camera_grab(self, laser: Laser, settings: dict) -> np.ndarray:
+        self.camera.Open()
+        self.camera.StopGrabbing()
+
+        trigger_mode = settings['imaging']['lm']['trigger_mode']
+
+        # set software triggering mode settings
+        if trigger_mode == TriggerMode.Software:
+            self.camera.TriggerMode.SetValue('Off')
+            self.camera.ExposureMode.SetValue('Timed')
+            try:
+                self.camera.ExposureTime.SetValue(float(laser.exposure_time))
+            except Exception as e:
+                try:
+                    self.camera.ExposureTimeAbs.SetValue(float(laser.exposure_time))
+                except Exception as e:
+                    self.camera.Close()
+                    raise e
+
+        # set hardware triggering mode settings
+        if trigger_mode == TriggerMode.Hardware:
+            self.camera.LineSelector.SetValue('Line4')
+            self.camera.TriggerMode.SetValue('On')
+            self.camera.TriggerSource.SetValue('Line4')
+
+            self.camera.ExposureMode.SetValue('TriggerWidth')
+            self.camera.AcquisitionFrameRateEnable.SetValue(False)
+
+        # take images
+        # self.camera.StopGrabbing()
+        self.camera.StartGrabbingMax(self.imageCount)
+        image = None
+
+        while self.camera.IsGrabbing():
+            if trigger_mode is TriggerMode.Hardware:
+                structured.single_line_pulse(delay=laser.exposure_time, pin=laser.pin)
+
+            grabResult = self.camera.RetrieveResult(
+                5000, pylon.TimeoutHandling_ThrowException)
+
+            if grabResult.GrabSucceeded():
+                image = grabResult.Array
+            else:
+                raise RuntimeError("Error: " + grabResult.ErrorCode + '\n' +
+                                    grabResult.ErrorDescription
+                                    )
+            grabResult.Release()
+
+        self.camera.Close()
+        image = np.flipud(self.image)
+        image = np.fliplr(self.image)
+        return image
+
+
+    def camera_grab2(self, exposure_time=None, trigger_mode='software', flip_image=True, laser_name=None, laser_pins=None):
         """Grab a new image from the Basler detector.
 
         Parameters
@@ -44,7 +96,7 @@ class Basler():
 
         Returns
         -------
-        self.image : numpy array
+        image : numpy array
         """
         self.camera.Open()
         self.camera.StopGrabbing()
@@ -99,7 +151,6 @@ class Basler():
 
         self.camera.StopGrabbing()
         self.camera.StartGrabbingMax(self.imageCount)
-        self.image = []
 
         while self.camera.IsGrabbing():
             if trigger_mode is 'hardware':
@@ -110,7 +161,7 @@ class Basler():
                 5000, pylon.TimeoutHandling_ThrowException)
 
             if grabResult.GrabSucceeded():
-                self.image = grabResult.Array
+                image = grabResult.Array
             else:
                 raise RuntimeError("Error: " + grabResult.ErrorCode + '\n' +
                                    grabResult.ErrorDescription
@@ -118,9 +169,9 @@ class Basler():
             grabResult.Release()
         self.camera.Close()
         if flip_image is True:
-            self.image = np.flipud(self.image)
-            self.image = np.fliplr(self.image)
-        return self.image
+            image = np.flipud(image)
+            image = np.fliplr(image)
+        return image
 
     def grab_slice(self, n_images=9, mirror_controller=None, arduino=None, laser_dict=None, flip_image=True):
         """Grab a slice using Arduino and NI controller"""

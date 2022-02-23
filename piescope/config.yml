@@ -24,3 +24,10 @@ lm:
     wavelength: 640 # nm
     pin: P03
     ID: laser1
+imaging:
+  lm:
+    trigger_mode: hardware # default: 'software', other option is 'hardware'
+    autosave: True
+    color: False
+  ib:
+    autosave: False

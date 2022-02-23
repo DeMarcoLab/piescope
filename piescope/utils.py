@@ -12,6 +12,18 @@ import tifffile
 import serial
 import serial.tools.list_ports
 import warnings
+from enum import Enum
+
+
+class TriggerMode(Enum):
+    Hardware = 0
+    Software = 1
+
+
+class Modality(Enum):
+    Light = 0
+    Ion = 1
+    Electron = 2
 
 
 def save_image(image, destination, metadata={}, *, allow_overwrite=False,
@@ -216,7 +228,18 @@ def rgb_image(image):
 def read_config(config_filename):
     with open(config_filename, "r") as file:
         settings_dict = yaml.safe_load(file)
+    settings_dict = parse_config(settings_dict)
     return settings_dict
+
+
+def parse_config(config):
+    mode = str(config["imaging"]["lm"]["trigger_mode"]).title()
+    if mode in TriggerMode.__members__:
+        config["imaging"]["lm"]["trigger_mode"] = TriggerMode[mode]
+    else:
+        config["imaging"]["lm"]["trigger_mode"] = TriggerMode.Software
+
+    return config
 
 
 

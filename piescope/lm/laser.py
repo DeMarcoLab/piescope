@@ -14,6 +14,7 @@ class Laser:
     power: float
     exposure_time: float  # us
     enabled: bool
+    pin: str
 
 
 class LaserController:
@@ -31,6 +32,7 @@ class LaserController:
                 power=0.0,
                 exposure_time=0.0,
                 enabled=False,
+                pin=laser["pin"]
             )
             self.lasers[current_laser.name] = current_laser
 
@@ -43,7 +45,6 @@ class LaserController:
             raise ValueError(f"Default laser set in config not found in available lasers.  Default laser is {default_laser}")
 
         self.current_laser = self.lasers[default_laser]
-        print(self.current_laser)
 
     def set_laser_power(self, laser: Laser, power: float) -> None:
         """sets power level of laser
