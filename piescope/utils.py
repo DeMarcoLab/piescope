@@ -1,16 +1,57 @@
-from datetime import datetime
 import logging
 import os
 import re
+import warnings
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
 
 import numpy as np
+import serial
+import serial.tools.list_ports
 import skimage.color
 import skimage.io
 import skimage.util
+import tifffile
+import yaml
+from autoscript_sdb_microscope_client.structures import AdornedImage
+from matplotlib import pyplot as plt
 
 
-def save_image(image, destination, metadata={}, *, allow_overwrite=False,
-               timestamp=True):
+class TriggerMode(Enum):
+    Hardware = 0
+    Software = 1
+
+
+class Modality(Enum):
+    Light = 0
+    Ion = 1
+    Electron = 2
+
+
+def load_image(filename: Path, adorned: bool = True):
+
+    # check file
+    if not os.path.exists(filename):
+        raise FileNotFoundError("File not found")
+
+    # open file
+    if adorned:
+        image = AdornedImage.load(filename)
+        try:
+            image.metadata.binary_result.pixel_size.x
+        except AttributeError:
+            raise AttributeError("Image must be AdornedImage type")
+    else:
+        image = skimage.io.imread(filename)
+
+    return image
+
+
+def save_image(
+    image, destination, metadata={}, *, allow_overwrite=False, timestamp=True
+):
     """Save image to file.
 
     Parameters
@@ -47,9 +88,9 @@ def save_image(image, destination, metadata={}, *, allow_overwrite=False,
     """
     destination = os.path.normpath(destination)
     # Make sure the output file format is acceptable
-    SUPPORTED_IMAGE_TYPES = ('.tif')
+    SUPPORTED_IMAGE_TYPES = ".tif"
     if not destination.endswith(SUPPORTED_IMAGE_TYPES):
-        destination += '.tif'
+        destination += ".tif"
     # Append timestamp string to filename, if needed
     if timestamp:
         timestamp_string = datetime.now().strftime("_%Y-%m-%dT%H%M%S%f")
@@ -60,18 +101,16 @@ def save_image(image, destination, metadata={}, *, allow_overwrite=False,
     if allow_overwrite is False:
         while os.path.exists(destination):
             base, ext = os.path.splitext(destination)
-            regex_match = re.search("_\([0-9]*\)$", base)
+            regex_match = re.search("_\\([0-9]*\\)$", base)
             if regex_match:
                 current_idx = int(regex_match.group(0)[2:-1])  # strip "_(" ")"
                 suffix_len = len(regex_match.group(0))
-                destination = (
-                    base[:-suffix_len] + "_({})".format(current_idx + 1) + ext
-                )
+                destination = base[:-suffix_len] + "_({})".format(current_idx + 1) + ext
             else:
                 destination = base + "_(1)" + ext
     # If directory does not currently exist, create it
     directory_name = os.path.dirname(destination)
-    if not directory_name == '' and not os.path.isdir(directory_name):
+    if not directory_name == "" and not os.path.isdir(directory_name):
         os.makedirs(directory_name)
     try:
         image.save(destination)  # eg: for AutoScript AdornedImage datatypes
@@ -84,30 +123,38 @@ def save_image(image, destination, metadata={}, *, allow_overwrite=False,
         # numpy array metadata is saved with regular metadata (not OME-TIFF)
         if isinstance(image, np.ndarray):
             # Make sure we have the right datatype to svae for ImageJ
-            if image.dtype.char not in 'BHhf':  # uint8, uint16, int16, or ?
+            if image.dtype.char not in "BHhf":  # uint8, uint16, int16, or ?
                 image = skimage.util.img_as_uint(image)  # 16 bit unsigned int
-            # If it's a volume image, must move channel axis before saving
-            if image.ndim == 4:  # (ZYXC)
-                image = np.moveaxis(image, -1, 1)  # move channel axis (ZCYX)
-                metadata.update({'axes':'ZCYX'})
-                skimage.io.imsave(destination, image, imagej=True,
-                    metadata=metadata)
-                logging.debug("Saved: {}".format(destination))
-            if image.ndim == 3:  # (YXC)
+            # If it's a volume image, must split channels and save individually
+            if image.ndim == 5:  # (AZPYX)
+                tifffile.imwrite(destination, image, bigtiff=True, metadata=metadata)
+
+            elif image.ndim == 6:  # (CAZPYX) --> (AZPYX)
+                volume_split = np.zeros(image.shape)
+                for i in range(image.shape[1]):
+                    volume_split[:, i] = image[:, i]
+                    metadata.update({"axes": "AZPYX"})
+                    destination = (
+                        destination.replace(".tif", "") + "_channel_" + str(i) + ".tif"
+                    )
+                    logging.debug("Saved: {}".format(destination))
+                    tifffile.imwrite(
+                        destination, volume_split[:, i], bigtiff=True, metadata=metadata
+                    )
+
+            elif image.ndim == 3:  # (YXC)
                 image = np.moveaxis(image, -1, 0)  # move channel axis (CYX)
-                metadata.update({'axes':'CYX'})
-                skimage.io.imsave(destination, image, imagej=True,
-                    metadata=metadata)
+                metadata.update({"axes": "CYX"})
+                skimage.io.imsave(destination, image, imagej=True, metadata=metadata)
                 logging.debug("Saved: {}".format(destination))
             else:  # Save all other images without changes
-                skimage.io.imsave(destination, image, imagej=True,
-                    metadata=metadata)
+                skimage.io.imsave(destination, image, imagej=True, metadata=metadata)
                 logging.debug("Saved: {}".format(destination))
         else:
             raise ValueError(
                 "Cannot save image! Expected a numpy array or AdornedImage, "
                 "instead found image.dtype of {}".format(image.dtype)
-                )
+            )
 
 
 def max_intensity_projection(image, start_slice=0, end_slice=None):
@@ -124,21 +171,32 @@ def max_intensity_projection(image, start_slice=0, end_slice=None):
     projected_max_intensity
         numpy array
     """
-    # Check input validity
-    if image.ndim != 4:
-        raise ValueError("expecting numpy.array with dimensions "
-                         "(pln, row, col, ch)")
-    # Slice image stack
-    if end_slice is None:
-        image = image[start_slice:, ...]
-    else:
-        image = image[start_slice:end_slice, ...]
-    image = np.moveaxis(image, -1, 0)
     results = []
-    for channel_image in image:
-        max_intensity = np.max(channel_image, axis=0)
-        results.append(max_intensity)
-    projected_max_intensity = np.stack(results, axis=-1)
+    # TODO: make this consistent
+    if image.ndim == 6:  # CAZPYX
+
+        for channel_image in image:
+            max_intensity = np.max(channel_image, axis=(0, 1, 2))
+            results.append(max_intensity)
+        projected_max_intensity = np.stack(results, axis=-1)
+
+    # Check input validity
+    else:
+        if image.ndim != 4:
+            raise ValueError(
+                "expecting numpy.array with dimensions " "(pln, row, col, ch)"
+            )
+            # Slice image stack
+        if end_slice is None:
+            image = image[start_slice:, ...]
+        else:
+            image = image[start_slice:end_slice, ...]
+        image = np.moveaxis(image, -1, 0)
+
+        for channel_image in image:
+            max_intensity = np.max(channel_image, axis=0)
+            results.append(max_intensity)
+        projected_max_intensity = np.stack(results, axis=-1)
     return projected_max_intensity
 
 
@@ -163,21 +221,26 @@ def rgb_image(image):
         Raised if the image dimensions or channels is not allowed.
     """
     if not (image.ndim == 2 or image.ndim == 3):
-        raise ValueError("Wrong number of dimensions in input image! "
-                         "Expected an image with 2 or 3 dimensions, "
-                         "but found {} dimensions".format(image.ndim))
+        raise ValueError(
+            "Wrong number of dimensions in input image! "
+            "Expected an image with 2 or 3 dimensions, "
+            "but found {} dimensions".format(image.ndim)
+        )
     if image.ndim == 2:
-        rgb_image = skimage.color.gray2rgb(image)
+        rgb_image = image
+        # rgb_image = skimage.color.gray2rgb(image)
         return rgb_image
     elif image.ndim == 3:
         if image.shape[-1] == 1:
-            rgb_image = np.zeros(shape=(image.shape[0], image.shape[1], 3),
-                                dtype=np.uint8)
+            rgb_image = np.zeros(
+                shape=(image.shape[0], image.shape[1], 3), dtype=np.uint8
+            )
             rgb_image[:, :, 0] = image[:, :, 0]
             return rgb_image
         elif image.shape[-1] == 2:
-            rgb_image = np.zeros(shape=(image.shape[0], image.shape[1], 3),
-                                dtype=np.uint8)
+            rgb_image = np.zeros(
+                shape=(image.shape[0], image.shape[1], 3), dtype=np.uint8
+            )
             rgb_image[:, :, 0] = image[:, :, 0]
             rgb_image[:, :, 1] = image[:, :, 1]
             return rgb_image
@@ -185,6 +248,102 @@ def rgb_image(image):
             rgb_image = image
             return rgb_image
         else:
-             raise ValueError("Wrong number of image channels! "
-                              "Expected up to 3 image channels, "
-                              "but found {} channels.".format(image.shape[-1]))
+            raise ValueError(
+                "Wrong number of image channels! "
+                "Expected up to 3 image channels, "
+                "but found {} channels.".format(image.shape[-1])
+            )
+
+
+def read_config(config_filename):
+    with open(config_filename, "r") as file:
+        settings_dict = yaml.safe_load(file)
+    settings_dict = parse_config(settings_dict)
+    return settings_dict
+
+
+def parse_config(config):
+    mode = str(config["imaging"]["lm"]["trigger_mode"]).title()
+    if mode in TriggerMode.__members__:
+        config["imaging"]["lm"]["trigger_mode"] = TriggerMode[mode]
+    else:
+        config["imaging"]["lm"]["trigger_mode"] = TriggerMode.Software
+
+    return config
+
+
+def connect_serial_port(settings):
+    """Serial port for communication with the lasers.
+
+    Parameters
+    ----------
+    port : str, optional
+        Serial port device name, by default 'COM3'.
+    baudrate : int, optional
+        Rate of communication, by default 115200 bits per second.
+    timeout : int, optional
+        Timeout period, by default 1 second.
+
+    Returns
+    -------
+    pyserial Serial() object
+        Serial port for communication with the lasers.
+    """
+
+    _available_serial_ports = serial.tools.list_ports.comports()
+    _available_port_names = [port.device for port in _available_serial_ports]
+
+    port = settings["serial"]["port"]
+    baudrate = settings["serial"]["baudrate"]
+    timeout = settings["serial"]["timeout"]
+
+    if port not in _available_port_names:
+        warnings.warn(
+            "Default laser serial port not available.\n" "Fall back to port {}".format()
+        )
+        port = _available_port_names[0]
+    return serial.Serial(port, baudrate=baudrate, timeout=timeout)
+
+
+def write_serial_command(serial_connection, command):
+    serial_connection.close()
+    serial_connection.open()
+    serial_connection.write(bytes(command, "utf-8"))
+    serial_connection.close()
+
+
+@dataclass
+class Crosshair:
+    rectangle_horizontal: plt.Rectangle
+    rectangle_vertical: plt.Rectangle
+
+
+def create_crosshair(image: np.ndarray or AdornedImage, settings: dict):
+    if type(image) == AdornedImage:
+        image = image.data
+
+    midx = int(image.shape[1] / 2)
+    midy = int(image.shape[0] / 2)
+
+    cross_width = int(
+        settings["imaging"]["crosshairs"]["thickness"] / 100 * image.shape[1]
+    )
+    cross_length = int(
+        settings["imaging"]["crosshairs"]["length"] / 100 * image.shape[1]
+    )
+
+    rect_horizontal = plt.Rectangle(
+        (midx - cross_length / 2, midy - cross_width / 2), cross_length, cross_width
+    )
+    rect_vertical = plt.Rectangle(
+        (midx - cross_width, midy - cross_length / 2), cross_width*2, cross_length
+    )
+
+    # set colours
+    colour = settings["imaging"]["crosshairs"]["color"]
+    rect_horizontal.set_color(colour)
+    rect_vertical.set_color(colour)
+
+    return Crosshair(
+        rectangle_horizontal=rect_horizontal, rectangle_vertical=rect_vertical
+    )

@@ -17,9 +17,9 @@ except Exception as e:
                 allow_module_level=True)
 
 
-def test_initialize():
+def test_initialise():
     """Test connecting to the microscope offline with localhost."""
-    microscope = piescope.fibsem.initialize("localhost")
+    microscope = piescope.fibsem.initialise("localhost")
 
 
 @pytest.fixture

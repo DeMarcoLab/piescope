@@ -1,0 +1,43 @@
+system:
+  ip_address: 10.0.0.1
+  offline_mode: True
+serial:
+  port: "COM3"
+  baudrate: 115200
+  timeout: 1
+lm:
+  default_laser: laser488
+  lasers:
+    - name: laser405
+      wavelength: 405 # nm
+      pin: P00
+      ID: laser4
+    - name: laser488
+      wavelength: 488 # nm
+      pin: P01
+      ID: laser3
+    - name: laser561
+      wavelength: 561 # nm
+      pin: P02
+      ID: laser2
+    - name: laser640
+      wavelength: 640 # nm
+      pin: P03
+      ID: laser1
+imaging:
+  lm:
+    trigger_mode: hardware # (str) 'software' [default] or 'hardware'
+    autosave: False
+    color: False
+    filter_strength: 0 # int or None
+    camera:
+      pin: P14
+      max_num_buffer: 5 # max number of images to store in the buffer
+      image_frame_interval: None # (float) time between frames if desired
+  ib:
+    autosave: False
+    filter_strength: 3 # int or None
+  crosshairs:
+    thickness: 0.1 # in % of image width
+    length: 10 # in % of image width
+    color: xkcd:yellow

@@ -20,7 +20,7 @@ MAINTAINER = 'Genevieve Buckley'
 URL = 'https://github.com/DeMarcoLab/piescope'
 DOWNLOAD_URL = 'https://github.com/DeMarcoLab/piescope'
 VERSION = __version__
-PYTHON_VERSION = (3, 5)
+PYTHON_VERSION = (3, 7)
 INST_DEPENDENCIES = parse_requirements_file(
     os.path.join('requirements', 'default.txt')
 )
