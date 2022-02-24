@@ -1,6 +1,6 @@
 system:
   ip_address: 10.0.0.1
-  offline_mode: True
+  online: True
 serial:
   port: "COM3"
   baudrate: 115200
@@ -33,7 +33,7 @@ imaging:
     camera:
       pin: P14
       max_num_buffer: 5 # max number of images to store in the buffer
-      image_frame_interval: None # (float) time between frames if desired
+      image_frame_interval: NULL # (float) time between frames if desired
   ib:
     autosave: False
     filter_strength: 3 # int or None
