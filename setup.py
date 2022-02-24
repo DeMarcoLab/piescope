@@ -11,18 +11,19 @@ def parse_requirements_file(filename):
     return requires
 
 
-descr = """DeMarco lab FIB-SEM package for automated controls."""
+descr = """DeMarco lab PIE-scope package."""
 
 DISTNAME = 'piescope'
-DESCRIPTION = 'DeMarco lab FIB-SEM tools.'
+DESCRIPTION = 'Integrated correlative light-electron microscopy tool'
 LONG_DESCRIPTION = descr
-MAINTAINER = 'Genevieve Buckley'
+AUTHOR_EMAIL = 'Patrick.Cleeve@monash.edu, David.Dierickx1@monash.edu'
+MAINTAINERS = 'Patrick Cleeve, David Dierickx'
 URL = 'https://github.com/DeMarcoLab/piescope'
 DOWNLOAD_URL = 'https://github.com/DeMarcoLab/piescope'
 VERSION = __version__
 PYTHON_VERSION = (3, 7)
 INST_DEPENDENCIES = parse_requirements_file(
-    os.path.join('requirements', 'default.txt')
+    'requirements.txt'
 )
 
 if __name__ == '__main__':
@@ -32,7 +33,8 @@ if __name__ == '__main__':
         url=URL,
         description=DESCRIPTION,
         long_description=LONG_DESCRIPTION,
-        author=MAINTAINER,
+        author=MAINTAINERS,
+        author_email=AUTHOR_EMAIL,
         packages=find_packages(),
         install_requires=INST_DEPENDENCIES,
     )
