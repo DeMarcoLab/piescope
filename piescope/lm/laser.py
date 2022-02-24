@@ -1,6 +1,6 @@
 """Module for laser control via serial communication."""
-from wsgiref.simple_server import demo_app
 from dataclasses import dataclass
+from wsgiref.simple_server import demo_app
 
 import numpy as np
 from piescope import utils
