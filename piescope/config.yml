@@ -38,6 +38,14 @@ imaging:
   ib:
     autosave: False
     filter_strength: 3 # int or None
+  volume:
+    time_delay: 0.1 #sec
+    autosave: True
+    count_max: 2
+    threshold: 10 
+  SIM:
+    angles: 3
+    phases: 3
   crosshairs:
     thickness: 0.1 # in % of image width
     length: 10 # in % of image width

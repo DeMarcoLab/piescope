@@ -18,7 +18,7 @@ class StageMacro(Enum):
     ONTARGET = auto()
 
 
-class StageMode(Enum):
+class ImagingType(Enum):
     WIDEFIELD = auto()
     SIM = auto()
 
@@ -32,7 +32,7 @@ class PIController:
         self.axes = self.device.allaxes
         self.move_to(StagePosition.WIDEFIELD)
         self.current_position = StagePosition.WIDEFIELD
-        self.mode = StageMode.WIDEFIELD
+        self.mode = ImagingType.WIDEFIELD
 
     def home(self) -> None:
         """Returns the stage to 0 on all axes"""
@@ -51,7 +51,7 @@ class PIController:
 
     def next_position(self):
         """Moves to the next SIM angle"""
-        if self.mode == StageMode.WIDEFIELD:
+        if self.mode == ImagingType.WIDEFIELD:
             return
         self.stopAll()
         if self.current_position == StagePosition.SIXTY:
@@ -61,7 +61,7 @@ class PIController:
         elif self.current_position == StagePosition.HORIZONTAL:
             self.move_to(StagePosition.SIXTY)
 
-    def set_mode(self, mode=StageMode.WIDEFIELD):
+    def set_mode(self, mode=ImagingType.WIDEFIELD):
         self.mode = mode
 
     def get_mode(self):

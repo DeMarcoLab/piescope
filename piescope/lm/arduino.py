@@ -2,6 +2,8 @@ import time
 import serial
 import serial.tools.list_ports
 
+from piescope.lm.laser import LaserController
+
 DEFAULT_SERIAL_PORT = 'COM7'  # default laser serial communication port
 
 class Arduino:
@@ -10,11 +12,12 @@ class Arduino:
         self.SERIAL_PORT = serial_port
         self.connection = connect_serial_port(self.SERIAL_PORT)
 
-    def send_volume_info(self, laser_dict):
+    def send_volume_info(self, laser_controller: LaserController):
         string_to_send = 'E'
-        for laser_name in ['laser640', 'laser561', 'laser488', 'laser405']:
-            if laser_name in laser_dict.keys():
-                string_to_send += str(int(laser_dict[laser_name][1]/1e3)) + ' '
+        for laser_name in ['laser640', 'laser561', 'laser488', 'laser405']: # order matters
+            laser = laser_controller.lasers[laser_name]
+            if laser.volume_enabled:
+                string_to_send += str(int(laser.exposure_time/1e3)) + ' '
             else:
                 string_to_send += str(0) + ' '
 

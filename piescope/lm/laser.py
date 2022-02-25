@@ -15,6 +15,7 @@ class Laser:
     exposure_time: float  # us
     enabled: bool
     pin: str
+    volume_enabled: bool
 
 
 class LaserController:
@@ -32,7 +33,8 @@ class LaserController:
                 power=0.0,
                 exposure_time=1e6,
                 enabled=False,
-                pin=laser["pin"]
+                pin=laser["pin"],
+                volume_enabled=False
             )
             self.lasers[current_laser.name] = current_laser
 
