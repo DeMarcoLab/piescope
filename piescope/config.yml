@@ -3,6 +3,7 @@ system:
   online: True
 serial:
   port: "COM3"
+  # port: "COM15"
   baudrate: 115200
   timeout: 1
 lm:
@@ -29,7 +30,7 @@ imaging:
     trigger_mode: hardware # (str) 'software' [default] or 'hardware'
     autosave: False
     color: False
-    filter_strength: 0 # int or None
+    filter_strength: 3 # int or None
     camera:
       pin: P14
       max_num_buffer: 5 # max number of images to store in the buffer

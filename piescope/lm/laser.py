@@ -30,7 +30,7 @@ class LaserController:
                 serial_id=laser["ID"],
                 wavelength=laser["wavelength"],
                 power=0.0,
-                exposure_time=0.0,
+                exposure_time=1e6,
                 enabled=False,
                 pin=laser["pin"]
             )
@@ -107,7 +107,7 @@ class LaserController:
             )
 
         exposure_time = np.clip(
-            exposure_time, 0.0, 10.0e6
+            exposure_time, 1.0, 10.0e6
         )  # unable to reverse the flow of time
         laser.exposure_time = exposure_time
 
