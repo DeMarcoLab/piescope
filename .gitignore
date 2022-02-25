@@ -68,3 +68,7 @@ nosetests.xml
 
 # Data directories
 notes/
+
+
+# conf
+config.yml
