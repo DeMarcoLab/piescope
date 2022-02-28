@@ -342,3 +342,27 @@ def update_camera_settings(camera_dwell_time, image_resolution):
         dwell_time=camera_dwell_time
     )
     return camera_settings
+
+
+def y_corrected_stage_movement(expected_y, stage_tilt, settings):
+    """Stage movement in Y, corrected for tilt of sample surface plane.
+    ----------
+    expected_y : in meters
+    stage_tilt : in radians        Can pass this directly microscope.specimen.stage.current_position.t
+    beam_type : BeamType, optional
+        BeamType.ELECTRON or BeamType.ION
+    Returns
+    -------
+    StagePosition
+        Stage position to pass to relative movement function.
+    """
+    # TODO: add settings, need to read pretilt, flat_to_ion magic number
+    from autoscript_sdb_microscope_client.structures import StagePosition
+
+    tilt_adjustment = np.deg2rad(52 - settings['imaging']['ib']['pretilt'])  # MAGIC_NUMBER
+    tilt_radians = stage_tilt + tilt_adjustment
+    y_move = +np.cos(tilt_radians) * expected_y
+    z_move = -np.sin(tilt_radians) * expected_y
+    logging.info(f"drift correction: the corrected Y shift is {y_move:.3e} meters")
+    logging.info(f"drift correction: the corrected Z shift is  {z_move:.3e} meters")
+    return StagePosition(x=0, y=y_move, z=z_move)

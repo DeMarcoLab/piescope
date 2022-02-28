@@ -30,12 +30,14 @@ imaging:
     trigger_mode: hardware # (str) 'software' [default] or 'hardware'
     autosave: False
     color: False
-    filter_strength: 3 # int or None
+    filter_strength: 0 # int or None
     camera:
       pin: P14
       max_num_buffer: 5 # max number of images to store in the buffer
       image_frame_interval: NULL # (float) time between frames if desired
+      pixel_size: 5.86e-6 # acA1920-155um
   ib:
+    pretilt: 52 # TODO: check if this can be always assumed
     autosave: False
     filter_strength: 3 # int or None
   volume:

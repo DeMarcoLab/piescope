@@ -19,6 +19,7 @@ class Basler:
         print(f"Using {self.camera.GetDeviceInfo().GetModelName()} for light imaging.")
         self.camera_pin = settings["imaging"]["lm"]["camera"]["pin"]
         self.camera.MaxNumBuffer = settings["imaging"]["lm"]["camera"]["max_num_buffer"]
+        self.pixel_size = 5.86e-6 
 
     def camera_grab(self, laser: Laser, settings: dict) -> np.ndarray:
         self.camera.Open()
