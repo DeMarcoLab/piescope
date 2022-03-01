@@ -4,7 +4,6 @@
 import nidaqmx
 import time
 from nidaqmx.constants import (LineGrouping)
-import threading
 
 LINES = {'P00': 'Dev1/port0/line0',
          'P01': 'Dev1/port0/line1',
@@ -34,7 +33,10 @@ LINES = {'P00': 'Dev1/port0/line0',
 
 
 def single_line_pulse(delay, pin):
-    task = nidaqmx.Task()
+    try:
+        task = nidaqmx.Task()
+    except Exception as e:
+        raise ConnectionError('Could not connect to nidaqmx device')
     task.do_channels.add_do_chan(
         LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES)
     task.write(True)
@@ -44,7 +46,10 @@ def single_line_pulse(delay, pin):
 
 
 def multi_line_pulse(delay, *pins):
-    task = nidaqmx.Task()
+    try:
+        task = nidaqmx.Task()
+    except Exception as e:
+        raise ConnectionError('Could not connect to nidaqmx device')
     for pin in pins:
         task.do_channels.add_do_chan(
             LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES)
@@ -56,54 +61,11 @@ def multi_line_pulse(delay, *pins):
 
 
 def single_line_onoff(onoff, pin):
-    task = nidaqmx.Task()
+    try:
+        task = nidaqmx.Task()
+    except Exception as e:
+        raise ConnectionError('Could not connect to nidaqmx device')
     task.do_channels.add_do_chan(
         LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES)
     task.write(onoff)
     task.close()
-
-
-def read_line(pin):
-    timeout = 3
-    start_time = time.time()
-    task = nidaqmx.Task()
-    task.di_channels.add_di_chan(
-        LINES[pin], line_grouping=LineGrouping.CHAN_FOR_ALL_LINES
-    )
-
-    triggered = False
-
-    data = task.read()
-    while not triggered:
-        data = task.read()
-        if data:
-            triggered = True
-        if time.time() >= start_time + timeout:
-            print('Stage settling timed out')
-            break
-
-    while data:
-        data = task.read()
-        if time.time() >= start_time + timeout:
-            print('Stage settling timed out')
-            break
-    task.close()
-
-
-# single_line_pulse(3e6, 'P02')
-# multi_line_pulse(3e6, 'P14', 'P13')
-# read_line('P13')
-# a# single_line_onoff(onoff=True, pin='P05')
-# read_line('P06')
-# single_line_onoff(onoff=True, pin='P03')
-# read_line('P06')
-
-
-def live_structured_worker(stop_event, run_time):
-    pass
-
-
-def continuous_reading(run_time):
-    stop_event = threading.Event()
-    _thread = threading.Thread(target=live_structured_worker, args=(stop_event, run_time))
-    _thread.start()
