@@ -157,102 +157,68 @@ def save_image(
             )
 
 
-def max_intensity_projection(image, start_slice=0, end_slice=None):
+def max_intensity_projection(image: np.ndarray) -> np.ndarray:
     """Returns maximum intensity projection of fluorescence image volume.
 
-    Parameters
-    ----------
-    image : expecting numpy array with dimensions (pln, row, col, ch)
-    start_slice : expecting integer.  First image index of z sub-stack
-    end_slice : expecting integer.  Last image index of z sub-stack, not incl.
+    Args:
+        image (np.ndarray):  expecting numpy array with dimensions:
+        (ch, angle, pln, phase, col, row)
 
-    Returns
-    -------
-    projected_max_intensity
-        numpy array
+    Raises:
+        ValueError: only accepts 6-D volumes of shape (ch, angle, pln, phase, col, row)
+
+    Returns:
+        np.ndarray: maximum intensity projected to ndarray of dimensions (col, row, ch)
     """
     results = []
-    # TODO: make this consistent
-    if image.ndim == 6:  # CAZPYX
 
+    if image.ndim == 6:
         for channel_image in image:
+            # collapse angles, phases and planes, keeping cols, rows and channels
             max_intensity = np.max(channel_image, axis=(0, 1, 2))
             results.append(max_intensity)
-        projected_max_intensity = np.stack(results, axis=-1)
 
-    # Check input validity
+        # put channels on last axis
+        projected_max_intensity = np.stack(results, axis=-1)
+        return projected_max_intensity
+
     else:
-        if image.ndim != 4:
-            raise ValueError(
-                "expecting numpy.array with dimensions " "(pln, row, col, ch)"
-            )
-            # Slice image stack
-        if end_slice is None:
-            image = image[start_slice:, ...]
-        else:
-            image = image[start_slice:end_slice, ...]
-        image = np.moveaxis(image, -1, 0)
-
-        for channel_image in image:
-            max_intensity = np.max(channel_image, axis=0)
-            results.append(max_intensity)
-        projected_max_intensity = np.stack(results, axis=-1)
-    return projected_max_intensity
+        raise ValueError(
+            "expecting numpy.array with dimensions " "(ch, angle, pln, phase, col, row)"
+        )
 
 
-def rgb_image(image):
-    """Converts input image to RGB output image.
+def rgb_image(image: np.ndarray, colour_dict: dict) -> np.ndarray:
+    """Convert an image into an RGB representation
 
-    Parameters
-    ----------
-    image : ndarray
-        Input image array to convert to an RGB image.
-        Must have 2 (grayscale) or 3 (color) image dimensions.
-        The number of color channels must be less than 3.
+    Args:
+        image (np.ndarray): expect ndarray of dimension (col, row, ch<=4)
+        colour_dict (dict): dictionary of colour mapping
 
-    Returns
-    -------
-    ndarray (M, N, 3)
-        RGB numpy image array.
+    Raises:
+        ValueError: image expected to be 3 dimensions
 
-    Raises
-    ------
-    ValueError
-        Raised if the image dimensions or channels is not allowed.
+    Returns:
+        np.ndarray: rgb version of image with shape (col, row, 3)
     """
-    if not (image.ndim == 2 or image.ndim == 3):
+
+    if image.ndim != 3:
         raise ValueError(
             "Wrong number of dimensions in input image! "
-            "Expected an image with 2 or 3 dimensions, "
+            "Expected an image with 3 dimensions, "
             "but found {} dimensions".format(image.ndim)
         )
-    if image.ndim == 2:
-        rgb_image = image
-        # rgb_image = skimage.color.gray2rgb(image)
-        return rgb_image
-    elif image.ndim == 3:
-        if image.shape[-1] == 1:
-            rgb_image = np.zeros(
-                shape=(image.shape[0], image.shape[1], 3), dtype=np.uint8
+
+    rgb = np.zeros(shape=(image.shape[0], image.shape[1], 3), dtype=np.uint8)
+
+    for i in range(3):  # for RGB
+        for channel in range(image.shape[-1]):  # for each laser channel
+            rgb[:, :, i] = (
+                rgb[:, :, i]
+                + image[:, :, channel] * float(colour_dict[channel][i]) * 1 / 255
             )
-            rgb_image[:, :, 0] = image[:, :, 0]
-            return rgb_image
-        elif image.shape[-1] == 2:
-            rgb_image = np.zeros(
-                shape=(image.shape[0], image.shape[1], 3), dtype=np.uint8
-            )
-            rgb_image[:, :, 0] = image[:, :, 0]
-            rgb_image[:, :, 1] = image[:, :, 1]
-            return rgb_image
-        elif image.shape[-1] == 3:
-            rgb_image = image
-            return rgb_image
-        else:
-            raise ValueError(
-                "Wrong number of image channels! "
-                "Expected up to 3 image channels, "
-                "but found {} channels.".format(image.shape[-1])
-            )
+
+    return rgb
 
 
 def read_config(config_filename):
@@ -336,7 +302,7 @@ def create_crosshair(image: np.ndarray or AdornedImage, settings: dict):
         (midx - cross_length / 2, midy - cross_width / 2), cross_length, cross_width
     )
     rect_vertical = plt.Rectangle(
-        (midx - cross_width, midy - cross_length / 2), cross_width*2, cross_length
+        (midx - cross_width, midy - cross_length / 2), cross_width * 2, cross_length
     )
 
     # set colours

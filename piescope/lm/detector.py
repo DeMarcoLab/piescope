@@ -22,6 +22,19 @@ class Basler:
         self.pixel_size = 5.86e-6 
 
     def camera_grab(self, laser: Laser, settings: dict) -> np.ndarray:
+        """Grabs a single fluorescence image
+
+        Args:
+            laser (Laser): the laser to use when taking the image
+            settings (dict): settings dictionary
+
+        Raises:
+            e: exception
+            RuntimeError: times out if takes too long to obtain an image
+
+        Returns:
+            np.ndarray: an image of dimension (row, col)
+        """
         self.camera.Open()
         self.camera.StopGrabbing()
 

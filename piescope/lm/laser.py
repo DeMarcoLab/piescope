@@ -16,6 +16,7 @@ class Laser:
     enabled: bool
     pin: str
     volume_enabled: bool
+    colour: list
 
 
 class LaserController:
@@ -34,7 +35,8 @@ class LaserController:
                 exposure_time=1e6,
                 enabled=False,
                 pin=laser["pin"],
-                volume_enabled=False
+                volume_enabled=False,
+                colour=laser["colour"]
             )
             self.lasers[current_laser.name] = current_laser
 

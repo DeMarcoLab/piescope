@@ -1,6 +1,7 @@
 system:
   ip_address: 10.0.0.1
   online: True
+  default_path: log/
 serial:
   port: "COM3"
   # port: "COM15"
@@ -13,18 +14,22 @@ lm:
       wavelength: 405 # nm
       pin: P00
       ID: laser4
+      colour: [0, 0, 255]
     - name: laser488
       wavelength: 488 # nm
       pin: P01
       ID: laser3
+      colour: [0, 255, 0]
     - name: laser561
       wavelength: 561 # nm
       pin: P02
       ID: laser2
+      colour: [255, 143, 51]
     - name: laser640
       wavelength: 640 # nm
       pin: P03
       ID: laser1
+      colour: [148, 43, 35]
 imaging:
   lm:
     trigger_mode: hardware # (str) 'software' [default] or 'hardware'

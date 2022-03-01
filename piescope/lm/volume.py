@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 def acquire_volume(num_z_slices, z_slice_distance, imaging_mode: ImagingType,
 laser_controller, mirror_controller, objective_stage, detector, arduino, settings ):
-    
+    #TODO: PROPER DOCSTRING, always returns CAZPYX
     time_delay = settings['imaging']['volume']['time_delay']
     angles = settings['imaging']['SIM']['angles']
     phases = settings['imaging']['SIM']['phases']
