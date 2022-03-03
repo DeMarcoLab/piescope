@@ -7,6 +7,8 @@ serial:
   # port: "COM15"
   baudrate: 115200
   timeout: 1
+lm_objective:
+  pin: P04
 lm:
   default_laser: laser488
   lasers:
@@ -49,7 +51,7 @@ imaging:
     time_delay: 0.1 #sec
     autosave: True
     count_max: 2
-    threshold: 10 
+    threshold: 10
   SIM:
     angles: 3
     phases: 3
