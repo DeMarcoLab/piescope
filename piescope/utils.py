@@ -227,6 +227,18 @@ def read_config(config_filename):
     settings_dict = parse_config(settings_dict)
     return settings_dict
 
+def write_config(config_filename, config):
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    print(current_path)
+    print(f'Config path {config_filename}')
+    print(config)
+
+    config['imaging']['lm']['trigger_mode'] = config['imaging']['lm']['trigger_mode'].name 
+    print(config)
+
+    with open(os.path.join(current_path, 'test_config.yml'), "w") as file:
+        yaml.safe_dump(config, file, sort_keys=False)
+
 
 def parse_config(config):
     mode = str(config["imaging"]["lm"]["trigger_mode"]).title()

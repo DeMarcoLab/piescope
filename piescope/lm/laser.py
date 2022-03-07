@@ -32,10 +32,10 @@ class LaserController:
                 serial_id=laser["ID"],
                 wavelength=laser["wavelength"],
                 power=0.0,
-                exposure_time=1e6,
+                exposure_time=laser["exposure_time"],
                 enabled=False,
                 pin=laser["pin"],
-                volume_enabled=False,
+                volume_enabled=laser["volume_enabled"],
                 colour=laser["colour"]
             )
             self.lasers[current_laser.name] = current_laser
