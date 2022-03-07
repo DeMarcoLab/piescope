@@ -12,66 +12,66 @@ lm:
   default_laser: laser488
   lasers:
   - name: laser405
-    wavelength: 405 # nm
+    wavelength: 405
     pin: P00
     ID: laser4
     colour:
     - 0
     - 0
     - 255
-    power: 0
-    exposure_time: 0
+    power: 0.0
+    exposure_time: 1000.0
     volume_enabled: false
   - name: laser488
-    wavelength: 488 # nm
+    wavelength: 488
     pin: P01
     ID: laser3
     colour:
     - 0
     - 255
     - 0
-    power: 0
-    exposure_time: 0
+    power: 10.0
+    exposure_time: 1000.0
     volume_enabled: false
   - name: laser561
-    wavelength: 561 # nm
+    wavelength: 561
     pin: P02
     ID: laser2
     colour:
     - 255
     - 143
     - 51
-    power: 0
-    exposure_time: 0
-    volume_enabled: false
+    power: 10.0
+    exposure_time: 1000.0
+    volume_enabled: true
   - name: laser640
-    wavelength: 640 # nm
+    wavelength: 640
     pin: P03
     ID: laser1
     colour:
     - 148
     - 43
     - 35
-    power: 0
-    exposure_time: 0
-    volume_enabled: false
+    power: 10.0
+    exposure_time: 500.0
+    volume_enabled: true
 imaging:
   lm:
-    trigger_mode: Hardware # (str) 'Software' [default] or 'Hardware'
+    trigger_mode: Hardware
     autosave: false
     color: false
-    filter_strength: 0  # int or None
+    filter_strength: 0
     camera:
       pin: P14
-      max_num_buffer: 5 # max number of images to store in the buffer
-      image_frame_interval: null # (float) time between frames if desired
-      pixel_size: 5.86e-06 # acA1920-155um
+      max_num_buffer: 5
+      image_frame_interval: null
+      pixel_size: 5.86e-06
   ib:
-    pretilt: 27 # TODO: check if this can be always assumed
+    pretilt: 27
     autosave: false
-    filter_strength: 3  # int or None
+    filter_strength: 3
   volume:
-    time_delay: 0.1 # sec
+    time_delay: 0.1
     autosave: true
     count_max: 2
     threshold: 10
@@ -79,6 +79,6 @@ imaging:
     angles: 3
     phases: 3
   crosshairs:
-    thickness: 0.1 # in % of image width
-    length: 10 # in % of image width
+    thickness: 0.1
+    length: 10
     color: xkcd:yellow

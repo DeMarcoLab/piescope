@@ -228,15 +228,10 @@ def read_config(config_filename):
     return settings_dict
 
 def write_config(config_filename, config):
-    current_path = os.path.dirname(os.path.abspath(__file__))
-    print(current_path)
-    print(f'Config path {config_filename}')
-    print(config)
 
     config['imaging']['lm']['trigger_mode'] = config['imaging']['lm']['trigger_mode'].name 
-    print(config)
 
-    with open(os.path.join(current_path, 'test_config.yml'), "w") as file:
+    with open(config_filename, "w") as file:
         yaml.safe_dump(config, file, sort_keys=False)
 
 

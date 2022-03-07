@@ -31,7 +31,7 @@ class LaserController:
                 name=laser["name"],
                 serial_id=laser["ID"],
                 wavelength=laser["wavelength"],
-                power=0.0,
+                power=laser["power"],
                 exposure_time=laser["exposure_time"],
                 enabled=False,
                 pin=laser["pin"],
