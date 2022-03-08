@@ -356,7 +356,6 @@ def y_corrected_stage_movement(expected_y, stage_tilt, settings, image):
     StagePosition
         Stage position to pass to relative movement function.
     """
-    # TODO: add settings, need to read pretilt, flat_to_ion magic number
     from autoscript_sdb_microscope_client.structures import StagePosition
     beam_type = image.metadata.acquisition.beam_type
     if settings["system"]["pretilt"] == 0:

@@ -50,14 +50,15 @@ class LaserController:
 
         self.current_laser = self.lasers[default_laser]
 
-        # TODO: improve this function
     def set_volume_enabled(self, laser: Laser, enabled: bool) -> None:
-        """_summary_
+        """Sets volume enabled flag
 
         Args:
-            laser (Laser): _description_
-            enabled (bool): _description_
+            laser (Laser): laser to set the flag of
+            enabled (bool): value to set the flag to
         """
+        if not isinstance(enabled, bool):
+            raise TypeError(f"Volume enabled must be a boolean. {type(enabled)} was passed.")
         laser.volume_enabled = enabled
 
     def set_laser_power(self, laser: Laser, power: float) -> None:

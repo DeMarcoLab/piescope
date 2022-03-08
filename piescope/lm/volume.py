@@ -33,18 +33,18 @@ laser_controller, mirror_controller, objective_stage, detector, arduino, setting
     laser_controller.set_laser_power(laser_controller.current_laser, 0.)
     array_shape = np.shape(detector.camera_grab(laser_controller.current_laser, settings))  # no lasers on
     laser_controller.set_laser_power(laser_controller.current_laser, temp_power)
-    
+
     print(f'Lasers: {laser_controller.lasers.values()}')
 
-    volume_enabled_laser_count = 0 
+    volume_enabled_laser_count = 0
     for laser in laser_controller.lasers.values():
         if laser.volume_enabled:
             volume_enabled_laser_count += 1
-    
-    
+
+
     laser_controller.volume_laser_count = volume_enabled_laser_count
     print(f'volume_enabled_laser_count: {laser_controller.volume_laser_count}')
-    
+
     volume = np.ndarray(dtype=np.uint8,
         shape=(volume_enabled_laser_count, angles, num_z_slices, phases, array_shape[0], array_shape[1]))
 
@@ -58,14 +58,14 @@ laser_controller, mirror_controller, objective_stage, detector, arduino, setting
                 if laser.volume_enabled:
                     image = detector.camera_grab(laser, settings)
                     volume[channel, 0, z_slice, 0, :, :] = image # (CAZPYX)
-                    channel += 1 
+                    channel += 1
 
         if imaging_mode == ImagingType.SIM:
             slice = grab_slice(laser_controller=laser_controller, detector=detector,
             settings=settings, mirror_controller=mirror_controller, arduino=arduino)
 
             slice_reshaped = np.array(slice).reshape(volume_enabled_laser_count, angles, phases, array_shape[0], array_shape[1])
-            
+
             img_index = list(range(len(slice)))
             for channel in range(volume_enabled_laser_count):
                 for angle in range(angles):
@@ -76,7 +76,7 @@ laser_controller, mirror_controller, objective_stage, detector, arduino, setting
                         # idx = test[a::N_LASERS][b::N_ANGLES][c::N_PHASES]
                         slice_reshaped[channel, angle, phase] = slice[idx]
             volume[:, :, z_slice, :, :, :] = slice_reshaped  # (CAZPYX)
-        
+
                 # Move objective lens stage
         target_position = (float(original_center_position)
                            + float(total_volume_height / 2.)
@@ -100,7 +100,7 @@ laser_controller, mirror_controller, objective_stage, detector, arduino, setting
             logger.debug('Difference is: {}'.format(str(difference)))
             count = count + 1
         piescope.lm.structured.single_line_pulse(100000, 'P04')
-        # TODO: add to pins in main
+        # TODO: add to pins in main/config
 
     # Finally, return the objective lens stage too original position
     objective_stage.move_absolute(original_center_position)
@@ -109,7 +109,7 @@ laser_controller, mirror_controller, objective_stage, detector, arduino, setting
     logging.info("Fluorescence volume acquistion finished.")
     return volume
 
-def grab_slice(laser_controller, 
+def grab_slice(laser_controller,
         detector,
         settings: dict,
         mirror_controller,
@@ -126,7 +126,7 @@ def grab_slice(laser_controller,
 
         angles = settings['imaging']['SIM']['angles']
         phases = settings['imaging']['SIM']['phases']
-        
+
         detector.camera.MaxNumBuffer = len(laser_controller.lasers) * angles * phases
         detector.camera.StopGrabbing()
         detector.camera.StartGrabbingMax(angles * phases * laser_controller.volume_laser_count)
