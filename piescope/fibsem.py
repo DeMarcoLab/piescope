@@ -344,7 +344,7 @@ def update_camera_settings(camera_dwell_time, image_resolution):
     return camera_settings
 
 
-def y_corrected_stage_movement(expected_y, stage_tilt, settings):
+def y_corrected_stage_movement(expected_y, stage_tilt, settings, image):
     """Stage movement in Y, corrected for tilt of sample surface plane.
     ----------
     expected_y : in meters
@@ -358,8 +358,15 @@ def y_corrected_stage_movement(expected_y, stage_tilt, settings):
     """
     # TODO: add settings, need to read pretilt, flat_to_ion magic number
     from autoscript_sdb_microscope_client.structures import StagePosition
-
-    tilt_adjustment = np.deg2rad(52 - settings['imaging']['ib']['pretilt'])  # MAGIC_NUMBER
+    beam_type = image.metadata.acquisition.beam_type
+    if settings["system"]["pretilt"] == 0:
+        return StagePosition(x=0, y=expected_y, z=0)
+    if beam_type == 'Ion':
+        tilt_adjustment = np.deg2rad(settings["imaging"]["ib"]["relative_angle"] - settings['system']['pretilt'])
+    elif beam_type == 'Electron':
+        tilt_adjustment = np.deg2rad(-settings['system']['pretilt'])
+    else:
+        raise ValueError('Beam type of image not found')
     tilt_radians = stage_tilt + tilt_adjustment
     y_move = +np.cos(tilt_radians) * expected_y
     z_move = -np.sin(tilt_radians) * expected_y

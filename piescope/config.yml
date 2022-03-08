@@ -2,6 +2,7 @@ system:
   ip_address: 10.0.0.1
   online: true
   default_path: log/
+  pretilt: 27
 serial:
   port: COM3
   baudrate: 115200
@@ -19,7 +20,7 @@ lm:
     - 0
     - 0
     - 255
-    power: 0.0
+    power: 10.0
     exposure_time: 1000.0
     volume_enabled: false
   - name: laser488
@@ -42,7 +43,7 @@ lm:
     - 143
     - 51
     power: 10.0
-    exposure_time: 1000.0
+    exposure_time: 200.0
     volume_enabled: true
   - name: laser640
     wavelength: 640
@@ -52,7 +53,7 @@ lm:
     - 148
     - 43
     - 35
-    power: 17.0
+    power: 9.0
     exposure_time: 500.0
     volume_enabled: true
 imaging:
@@ -67,7 +68,7 @@ imaging:
       image_frame_interval: null
       pixel_size: 5.86e-06
   ib:
-    pretilt: 27
+    relative_angle: 52
     autosave: false
     filter_strength: 3
   volume:
@@ -83,12 +84,10 @@ imaging:
     length: 10
     color: xkcd:yellow
 lamella:
-  lamella_width: 12e-6
-  lamella_height: 10e-6
-  total_cut_height: 10e-6
-  milling_depth: 5e-6
+  lamella_width: 1.2e-05
+  lamella_height: 1.0e-05
+  milling_depth: 5.0e-06
   milling_current: 2.4e-09
-  hfw: 150e-6
-  size_ratio: 2.0
-  trench_height: 5e-6
-  offset: 0e-6
+  hfw: 0.00015
+  upper_height: 5.0e-06
+  lower_height: 2.5e-06
