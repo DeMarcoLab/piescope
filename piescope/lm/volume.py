@@ -33,13 +33,17 @@ laser_controller, mirror_controller, objective_stage, detector, arduino, setting
     laser_controller.set_laser_power(laser_controller.current_laser, 0.)
     array_shape = np.shape(detector.camera_grab(laser_controller.current_laser, settings))  # no lasers on
     laser_controller.set_laser_power(laser_controller.current_laser, temp_power)
+    
+    print(f'Lasers: {laser_controller.lasers.values()}')
 
     volume_enabled_laser_count = 0 
     for laser in laser_controller.lasers.values():
         if laser.volume_enabled:
             volume_enabled_laser_count += 1
     
+    
     laser_controller.volume_laser_count = volume_enabled_laser_count
+    print(f'volume_enabled_laser_count: {laser_controller.volume_laser_count}')
     
     volume = np.ndarray(dtype=np.uint8,
         shape=(volume_enabled_laser_count, angles, num_z_slices, phases, array_shape[0], array_shape[1]))

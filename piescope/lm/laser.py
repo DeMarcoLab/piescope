@@ -50,6 +50,16 @@ class LaserController:
 
         self.current_laser = self.lasers[default_laser]
 
+        # TODO: improve this function
+    def set_volume_enabled(self, laser: Laser, enabled: bool) -> None:
+        """_summary_
+
+        Args:
+            laser (Laser): _description_
+            enabled (bool): _description_
+        """
+        laser.volume_enabled = enabled
+
     def set_laser_power(self, laser: Laser, power: float) -> None:
         """sets power level of laser
 
