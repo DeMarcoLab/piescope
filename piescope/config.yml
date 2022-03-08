@@ -52,7 +52,7 @@ lm:
     - 148
     - 43
     - 35
-    power: 10.0
+    power: 17.0
     exposure_time: 500.0
     volume_enabled: true
 imaging:
@@ -82,3 +82,13 @@ imaging:
     thickness: 0.1
     length: 10
     color: xkcd:yellow
+lamella:
+  lamella_width: 12e-6
+  lamella_height: 10e-6
+  total_cut_height: 10e-6
+  milling_depth: 5e-6
+  milling_current: 2.4e-09
+  hfw: 150e-6
+  size_ratio: 2.0
+  trench_height: 5e-6
+  offset: 0e-6
