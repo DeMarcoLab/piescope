@@ -1,5 +1,6 @@
 """Module for the Basler fluorescence detector."""
 import numpy as np
+import logging 
 from piescope.lm import structured
 from piescope.lm.laser import Laser
 from piescope.lm.mirror import StageMacro
@@ -16,8 +17,7 @@ class Basler:
         self.camera = pylon.InstantCamera(
             pylon.TlFactory.GetInstance().CreateFirstDevice()
         )
-        print(f"Using {self.camera.GetDeviceInfo().GetModelName()} for light imaging.")
-        self.camera_pin = settings["imaging"]["lm"]["camera"]["pin"]
+        logging.info(f"Using {self.camera.GetDeviceInfo().GetModelName()} for light imaging.")
         self.camera.MaxNumBuffer = settings["imaging"]["lm"]["camera"]["max_num_buffer"]
         self.pixel_size = 5.86e-6 
 

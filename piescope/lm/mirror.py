@@ -1,6 +1,6 @@
 from pipython import GCSDevice
 from enum import Enum, auto
-
+import logging
 
 class StagePosition(Enum):
     WIDEFIELD = [2, -3]
@@ -43,7 +43,7 @@ class PIController:
         GCSDevice.MOV(self.device, self.axes, stage_position.value)
         self.start_macro(StageMacro.ONTARGET)
         self.current_position = stage_position
-        print(f'Current position: {self.current_position.name}')
+        logging.info(f'Current position: {self.current_position.name}')
 
     def get_current_position(self):
         """Returns currently set position, not necessarily actual position"""
@@ -80,7 +80,7 @@ class PIController:
         # stop any previous or start-up macros
         if GCSDevice.IsRunningMacro(self.device):
             startup_macro = GCSDevice.qRMC(self.device).strip('\n')
-            print(f'Currently running macro: {startup_macro}, closing...')
+            logging.info(f'Currently running macro: {startup_macro}, closing...')
             self.stopAll()
         else:
-            print(f'Not running any macros on startup.')
+            logging.info(f'Not running any macros on startup.')

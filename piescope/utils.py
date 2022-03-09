@@ -88,73 +88,50 @@ def save_image(
     """
     destination = os.path.normpath(destination)
     # Make sure the output file format is acceptable
-    SUPPORTED_IMAGE_TYPES = ".tif"
-    if not destination.endswith(SUPPORTED_IMAGE_TYPES):
-        destination += ".tif"
+    if not destination.endswith(".tiff"):
+        destination += ".tiff"
+        
     # Append timestamp string to filename, if needed
     if timestamp:
         timestamp_string = datetime.now().strftime("_%Y-%m-%dT%H%M%S%f")
         base, ext = os.path.splitext(destination)
         destination = base + timestamp_string + ext
-    # Modify filename to prevent overwriting, if allow_overwrite is False
-    # Appends filenames with "_(1)", "_(2)", etc.
-    if allow_overwrite is False:
-        while os.path.exists(destination):
-            base, ext = os.path.splitext(destination)
-            regex_match = re.search("_\\([0-9]*\\)$", base)
-            if regex_match:
-                current_idx = int(regex_match.group(0)[2:-1])  # strip "_(" ")"
-                suffix_len = len(regex_match.group(0))
-                destination = base[:-suffix_len] + "_({})".format(current_idx + 1) + ext
-            else:
-                destination = base + "_(1)" + ext
-    # If directory does not currently exist, create it
-    directory_name = os.path.dirname(destination)
-    if not directory_name == "" and not os.path.isdir(directory_name):
-        os.makedirs(directory_name)
-    try:
-        image.save(destination)  # eg: for AutoScript AdornedImage datatypes
+    
+    os.makedirs(os.path.dirname(destination), exist_ok=True)
+    
+    if isinstance(image, AdornedImage):
+        image.save(destination)
         logging.debug("Saved: {}".format(destination))
-        # Metadata for AdornedImage types is saved in the OME-TIFF metadata.
-        # You can load the image and metadata back in using .load(), eg:
-        # from autoscript_sdb_microscope_client.structures import AdornedImage
-        # returned_image = AdornedImage().load("autoscript_save_filename.tif")
-    except AttributeError:
-        # numpy array metadata is saved with regular metadata (not OME-TIFF)
-        if isinstance(image, np.ndarray):
-            # Make sure we have the right datatype to svae for ImageJ
-            if image.dtype.char not in "BHhf":  # uint8, uint16, int16, or ?
-                image = skimage.util.img_as_uint(image)  # 16 bit unsigned int
-            # If it's a volume image, must split channels and save individually
-            if image.ndim == 5:  # (AZPYX)
-                tifffile.imwrite(destination, image, bigtiff=True, metadata=metadata)
+        return
+    if isinstance(image, np.ndarray):
+        if image.dtype.char not in "BHhf":  # uint8, uint16, int16, or ?
+            image = skimage.util.img_as_uint(image)  # 16 bit unsigned int
 
-            elif image.ndim == 6:  # (CAZPYX) --> (AZPYX)
-                volume_split = np.zeros(image.shape)
-                for i in range(image.shape[1]):
-                    volume_split[:, i] = image[:, i]
-                    metadata.update({"axes": "AZPYX"})
-                    destination = (
-                        destination.replace(".tif", "") + "_channel_" + str(i) + ".tif"
-                    )
-                    logging.debug("Saved: {}".format(destination))
-                    tifffile.imwrite(
-                        destination, volume_split[:, i], bigtiff=True, metadata=metadata
-                    )
+        # if saving a volume:
+        if image.ndim == 6:  # (CAZPYX) --> (AZPYX)
+            volume_split = np.zeros(image.shape)
+            for i in range(image.shape[0]):
+                volume_split[:, i] = image[:, i]
+                metadata.update({"axes": "AZPYX"})
+                destination = (destination.replace(".tif", "") + "_channel_" + str(i) + ".tif")
+                tifffile.imwrite(destination, volume_split[:, i], bigtiff=True, metadata=metadata)
+            return
 
-            elif image.ndim == 3:  # (YXC)
-                image = np.moveaxis(image, -1, 0)  # move channel axis (CYX)
-                metadata.update({"axes": "CYX"})
-                skimage.io.imsave(destination, image, imagej=True, metadata=metadata)
-                logging.debug("Saved: {}".format(destination))
-            else:  # Save all other images without changes
-                skimage.io.imsave(destination, image, imagej=True, metadata=metadata)
-                logging.debug("Saved: {}".format(destination))
-        else:
-            raise ValueError(
-                "Cannot save image! Expected a numpy array or AdornedImage, "
-                "instead found image.dtype of {}".format(image.dtype)
-            )
+        # otherwise save regular image
+        if image.ndim == 3:  # (YXC)
+            image = np.moveaxis(image, -1, 0)  # move channel axis (CYX)
+            metadata.update({"axes": "CYX"})
+
+        skimage.io.imsave(destination, image, imagej=True, metadata=metadata)
+        
+        logging.debug("Saved: {}".format(destination))
+        
+
+    else:
+        raise ValueError(
+        "Cannot save image! Expected a numpy array or AdornedImage, "
+        "instead found image.dtype of {}".format(image.dtype)
+    )
 
 
 def max_intensity_projection(image: np.ndarray) -> np.ndarray:

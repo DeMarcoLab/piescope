@@ -14,18 +14,21 @@ def initialise(ip_address='10.0.0.1'):
     microscope.connect(ip_address)
     return microscope
 
-# TODO: add parameters to config
 def move_to_microscope(microscope, settings: dict):
     from autoscript_sdb_microscope_client.structures import StagePosition
     x, y = settings['system']['relative_lm_position']
     current_position_x = microscope.specimen.stage.current_position.x
-    if -10e-3 < current_position_x < 10e-3:
-        pass
-        print('Under FIBSEM, moving to light microscope')
-    elif 40e-3 < current_position_x < 60e-3:
+    fibsem_min = settings['system']['fibsem_min_position']
+    fibsem_max = settings['system']['fibsem_max_position']
+    lm_min = settings['system']['lm_min_position']
+    lm_max = settings['system']['lm_max_position']
+    
+    if fibsem_min < current_position_x < fibsem_max:
+        logging.info('Under FIBSEM, moving to light microscope')
+    elif lm_min < current_position_x < lm_max:
         x = -x
         y = -y
-        print('Under light microscope, moving to FIBSEM')
+        logging.info('Under light microscope, moving to FIBSEM')
     else:
         raise RuntimeError('Not positioned under the either microscope, cannot move to other microscope')
 

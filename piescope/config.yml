@@ -6,6 +6,11 @@ system:
   relative_lm_position:
   - 0.0499092
   - -0.0001143
+  fibsem_min_position: -10.e-3
+  fibsem_max_position: 10.e-3
+  lm_min_position: 40.e-3
+  lm_max_position: 60.e-3
+
   save_config_on_exit: false
 serial:
   port: COM3
@@ -67,7 +72,6 @@ imaging:
     color: false
     filter_strength: 0
     camera:
-      pin: P14
       max_num_buffer: 5
       image_frame_interval: null
       pixel_size: 5.86e-06
@@ -77,9 +81,10 @@ imaging:
     filter_strength: 3
   volume:
     time_delay: 0.1
-    autosave: false
+    autosave: true
     count_max: 2
     threshold: 10
+    slice_interrupt_pin: P04
   SIM:
     angles: 3
     phases: 3
@@ -93,7 +98,8 @@ lamella:
   lamella_width: 1.2e-05
   lamella_height: 1.0e-05
   milling_depth: 5.0e-06
-  milling_current: 2.4e-09
+  milling_current: 10.1e-12
+  # milling_current: 2.4e-09
   hfw: 0.00015
   upper_height: 5.0e-06
   lower_height: 2.5e-06

@@ -67,7 +67,7 @@ imaging:
       image_frame_interval: null # (float) time between frames if desired
       pixel_size: 5.86e-06 # acA1920-155um
   ib:
-    pretilt: 27 # TODO: check if this can be always assumed
+    pretilt: 0
     autosave: false
     filter_strength: 3  # int or None
   volume:

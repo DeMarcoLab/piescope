@@ -1,6 +1,5 @@
-import os
-import time
 
+import logging
 import numpy as np
 import scipy.ndimage as ndi
 import skimage
@@ -58,8 +57,7 @@ def calculate_transform(src, dst, model=AffineTransform()):
     """
 
     model.estimate(src, dst)
-    print('Transformation matrix:')
-    print(model.params)
+    logging.info(f'Transformation matrix: {model.params}')
 
     return model.params
 
@@ -133,7 +131,7 @@ def overlay_images(fluorescence_image, fibsem_image, transparency=0.5):
     return blended
 
 
-def correlate_images(fluorescence_image_rgb, fibsem_image, output_path, matched_points_dict):
+def correlate_images(fluorescence_image_rgb, fibsem_image, output_path, matched_points_dict, settings):
     """Correlates two images using points chosen by the user
 
     Parameters
@@ -149,7 +147,7 @@ def correlate_images(fluorescence_image_rgb, fibsem_image, output_path, matched_
     Dictionary of points selected in the correlation window
     """
     if matched_points_dict == []:
-        print('No control points selected, exiting.')
+        logging.error('No control points selected, exiting.')
         return
 
     src, dst = point_coords(matched_points_dict)
@@ -159,6 +157,7 @@ def correlate_images(fluorescence_image_rgb, fibsem_image, output_path, matched_
     result = skimage.util.img_as_ubyte(result)
 
     # plt.imsave(output_path, result)
-    piescope.utils.save_image(result, output_path)
+    if settings['imaging']['correlation']['autosave']:
+        piescope.utils.save_image(result, output_path)
 
     return result
