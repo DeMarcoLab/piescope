@@ -103,35 +103,33 @@ def save_image(
         image.save(destination)
         logging.debug("Saved: {}".format(destination))
         return
-    if isinstance(image, np.ndarray):
-        if image.dtype.char not in "BHhf":  # uint8, uint16, int16, or ?
-            image = skimage.util.img_as_uint(image)  # 16 bit unsigned int
-
-        # if saving a volume:
-        if image.ndim == 6:  # (CAZPYX) --> (AZPYX)
-            volume_split = np.zeros(image.shape)
-            for i in range(image.shape[0]):
-                volume_split[:, i] = image[:, i]
-                metadata.update({"axes": "AZPYX"})
-                destination = (destination.replace(".tif", "") + "_channel_" + str(i) + ".tif")
-                tifffile.imwrite(destination, volume_split[:, i], bigtiff=True, metadata=metadata)
-            return
-
-        # otherwise save regular image
-        if image.ndim == 3:  # (YXC)
-            image = np.moveaxis(image, -1, 0)  # move channel axis (CYX)
-            metadata.update({"axes": "CYX"})
-
-        skimage.io.imsave(destination, image, imagej=True, metadata=metadata)
-        
-        logging.debug("Saved: {}".format(destination))
-        
-
-    else:
+    if not isinstance(image, np.ndarray):
         raise ValueError(
         "Cannot save image! Expected a numpy array or AdornedImage, "
         "instead found image.dtype of {}".format(image.dtype)
-    )
+        )
+
+    if image.dtype.char not in "BHhf":  # uint8, uint16, int16, or ?
+        image = skimage.util.img_as_uint(image)  # 16 bit unsigned int
+
+    # if saving a volume:
+    if image.ndim == 6:  # (CAZPYX) --> (AZPYX)
+        volume_split = np.zeros(image.shape)
+        for i in range(image.shape[0]):
+            volume_split[:, i] = image[:, i]
+            metadata.update({"axes": "AZPYX"})
+            destination = (destination.replace(".tif", "") + "_channel_" + str(i) + ".tif")
+            tifffile.imwrite(destination, volume_split[:, i], bigtiff=True, metadata=metadata)
+        return
+
+    # otherwise save regular image
+    if image.ndim == 3:  # (YXC)
+        image = np.moveaxis(image, -1, 0)  # move channel axis (CYX)
+        metadata.update({"axes": "CYX"})
+
+    skimage.io.imsave(destination, image, imagej=True, metadata=metadata)
+    
+    logging.debug("Saved: {}".format(destination))
 
 
 def max_intensity_projection(image: np.ndarray) -> np.ndarray:
