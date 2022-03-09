@@ -13,7 +13,7 @@ from pypylon import pylon
 logger = logging.getLogger(__name__)
 
 
-def acquire_volume(num_z_slices, z_slice_distance, imaging_mode: ImagingType,
+def acquire_volume(num_z_slices, z_slice_distance, imaging_type: ImagingType,
 laser_controller, mirror_controller, objective_stage, detector, arduino, settings ):
     #TODO: PROPER DOCSTRING, always returns CAZPYX
     time_delay = settings['imaging']['volume']['time_delay']
@@ -49,7 +49,7 @@ laser_controller, mirror_controller, objective_stage, detector, arduino, setting
         shape=(volume_enabled_laser_count, angles, num_z_slices, phases, array_shape[0], array_shape[1]))
 
     for z_slice in range(num_z_slices):
-        if imaging_mode == ImagingType.WIDEFIELD:
+        if imaging_type == ImagingType.WIDEFIELD:
             mirror_controller.stopAll()
             mirror_controller.move_to(StagePosition.WIDEFIELD)
 
@@ -60,7 +60,7 @@ laser_controller, mirror_controller, objective_stage, detector, arduino, setting
                     volume[channel, 0, z_slice, 0, :, :] = image # (CAZPYX)
                     channel += 1
 
-        if imaging_mode == ImagingType.SIM:
+        if imaging_type == ImagingType.SIM:
             slice = grab_slice(laser_controller=laser_controller, detector=detector,
             settings=settings, mirror_controller=mirror_controller, arduino=arduino)
 

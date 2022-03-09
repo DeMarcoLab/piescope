@@ -1,6 +1,9 @@
 import logging
+from re import M
 
 import numpy as np
+from piescope.utils import Modality
+
 """Module for interacting with the FIBSEM using Autoscript."""
 
 
@@ -11,95 +14,23 @@ def initialise(ip_address='10.0.0.1'):
     microscope.connect(ip_address)
     return microscope
 
-# Too far! even futher than the fluorescence position
-# x = 54.5085 mm <-- LIMIT HIT
-#
-# Fluorescence position (roughly)
-# x = +48.4295 mm
-# y = -10.1004 mm
-#
-# FIBSEM position (roughly)
-# x = -1.5225 mm
-# y = -9.9092 mm
-#
-# Too far! even further than the FIBSEM place
-# x = -51.4745 mm
-# y = -9.718 mm
-# z = -4.0000 mm
-#
-# LIMIT!
-# x = -55.4915 mm <- LIMIT HIT
-#
-
-
-def move_to_light_microscope(microscope, x=50.0e-3, y=0.0):
-    """Move the sample stage from the FIBSEM to the light microscope.
-
-    Parameters
-    ----------
-    microscope : Autoscript microscope object.
-    x : float, optional
-        Relative movement in x to go from the FIBSEM to the light microscope.
-        By default positive 50 millimeters in the x-direction.
-    y : float, optional
-        Relative movement in y to go from the FIBSEM to the light microscope.
-        By default this is zero.
-
-    Returns
-    -------
-    StagePosition
-        FIBSEM microscope sample stage position after moving.
-        If the returned stage position is called 'stage_pos' then:
-        stage_pos.x = the x position of the FIBSEM sample stage (in meters)
-        stage_pos.y = the y position of the FIBSEM sample stage (in meters)
-        stage_pos.z = the z position of the FIBSEM sample stage (in meters)
-        stage_pos.r = the rotation of the FIBSEM sample stage (in radians)
-        stage_pos.t = the tilt of the FIBSEM sample stage (in radians)
-    """
+# TODO: add parameters to config
+def move_to_microscope(microscope, settings: dict):
     from autoscript_sdb_microscope_client.structures import StagePosition
+    x, y = settings['system']['relative_lm_position']
     current_position_x = microscope.specimen.stage.current_position.x
-    if current_position_x > 10e-3 or current_position_x < -10e-3:
-        print('Not under electron microscope, please reposition')
-        return
+    if -10e-3 < current_position_x < 10e-3:
+        pass
+        print('Under FIBSEM, moving to light microscope')
+    elif 40e-3 < current_position_x < 60e-3:
+        x = -x
+        y = -y
+        print('Under light microscope, moving to FIBSEM')
+    else:
+        raise RuntimeError('Not positioned under the either microscope, cannot move to other microscope')
+
     new_position = StagePosition(x=x, y=y, z=0, r=0, t=0)
     microscope.specimen.stage.relative_move(new_position)
-    print("Moved to light microscope.")
-    return microscope.specimen.stage.current_position
-
-
-def move_to_electron_microscope(microscope, x=-50.0e-3, y=0.0):
-    """Move the sample stage from the light microscope to the FIBSEM.
-
-    Parameters
-    ----------
-    microscope : Autoscript microscope object.
-    x : float, optional
-        Relative movement in x to go from the light microscope to the FIBSEM.
-        By default negative 50 millimeters in the x-direction.
-    y : float, optional
-        Relative movement in y to go from the light microscope to the FIBSEM.
-        By default this is zero.
-
-    Returns
-    -------
-    StagePosition
-        FIBSEM microscope sample stage position after moving.
-        If the returned stage position is called 'stage_pos' then:
-        stage_pos.x = the x position of the FIBSEM sample stage (in meters)
-        stage_pos.y = the y position of the FIBSEM sample stage (in meters)
-        stage_pos.z = the z position of the FIBSEM sample stage (in meters)
-        stage_pos.r = the rotation of the FIBSEM sample stage (in radians)
-        stage_pos.t = the tilt of the FIBSEM sample stage (in radians)
-    """
-    from autoscript_sdb_microscope_client.structures import StagePosition
-    current_position_x = microscope.specimen.stage.current_position.x
-    if current_position_x > 60e-3 or current_position_x < 40e-3:
-        print('Not under light microscope, please reposition')
-        return
-    new_position = StagePosition(x=x, y=y, z=0, r=0, t=0)
-    microscope.specimen.stage.relative_move(new_position)
-    print("Moved to electron microscope.")
-    return microscope.specimen.stage.current_position
 
 
 def new_ion_image(microscope, settings=None):
@@ -152,7 +83,6 @@ def new_electron_image(microscope, settings=None):
     return image
 
 
-# i'm pretty sure Gen coded that somwhere, might save you some time figurting it out
 def last_ion_image(microscope):
     """Get the last previously acquired ion beam image.
 
