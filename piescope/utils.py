@@ -114,12 +114,15 @@ def save_image(
 
     # if saving a volume:
     if image.ndim == 6:  # (CAZPYX) --> (AZPYX)
-        volume_split = np.zeros(image.shape)
+        tifffile.imwrite(destination, image, bigtiff=True, metadata=metadata)
+        temp_destination = destination
+        print(f'Image shape when saving: {image.shape}')
+        # volume_split = np.zeros(image.shape)
         for i in range(image.shape[0]):
-            volume_split[:, i] = image[:, i]
+            # volume_split[:, i] = image[:, i]
             metadata.update({"axes": "AZPYX"})
-            destination = (destination.replace(".tif", "") + "_channel_" + str(i) + ".tif")
-            tifffile.imwrite(destination, volume_split[:, i], bigtiff=True, metadata=metadata)
+            temp_destination = (destination.replace(".tiff", "") + "_channel_" + str(i) + ".tiff")
+            tifffile.imwrite(temp_destination, image[i], bigtiff=True, metadata=metadata)
         return
 
     # otherwise save regular image
