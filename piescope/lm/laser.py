@@ -1,9 +1,8 @@
 """Module for laser control via serial communication."""
 from dataclasses import dataclass
-from wsgiref.simple_server import demo_app
-
 import numpy as np
 from piescope import utils
+from PyQt5.QtWidgets import QDoubleSpinBox, QLineEdit, QCheckBox
 
 
 @dataclass
@@ -17,6 +16,9 @@ class Laser:
     pin: str
     volume_enabled: bool
     colour: list
+    spinBox: QDoubleSpinBox
+    lineEdit: QLineEdit
+    volumeCheckBox: QCheckBox
 
 
 class LaserController:
@@ -36,7 +38,10 @@ class LaserController:
                 enabled=False,
                 pin=laser["pin"],
                 volume_enabled=laser["volume_enabled"],
-                colour=laser["colour"]
+                colour=laser["colour"],
+                spinBox=None,
+                lineEdit=None,
+                volumeCheckBox=None
             )
             self.lasers[current_laser.name] = current_laser
 
@@ -60,6 +65,25 @@ class LaserController:
         if not isinstance(enabled, bool):
             raise TypeError(f"Volume enabled must be a boolean. {type(enabled)} was passed.")
         laser.volume_enabled = enabled
+
+    def set_double_spin_box(self, laser: Laser, spinBox: QDoubleSpinBox) -> None:
+        if not isinstance(spinBox, QDoubleSpinBox):
+            raise TypeError(f"Must set the double spin box as a QDoubleSpinBox.  {type(spinBox)} was passed.")
+
+        laser.spinBox = spinBox
+
+    def set_line_edit(self, laser: Laser, lineEdit: QLineEdit) -> None:
+        if not isinstance(lineEdit, QLineEdit):
+            raise TypeError(f"Must set the line edit as a QLineEdit.  {type(lineEdit)} was passed.")
+
+        laser.lineEdit = lineEdit
+    
+    def set_check_box(self, laser: Laser, checkBox: QCheckBox) -> None:
+        if not isinstance(checkBox, QCheckBox):
+            raise TypeError(f"Must set the check box as a QCheckBox.  {type(checkBox)} was passed.")
+
+        laser.volumeCheckBox = checkBox
+
 
     def set_laser_power(self, laser: Laser, power: float) -> None:
         """sets power level of laser

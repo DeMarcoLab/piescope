@@ -75,6 +75,8 @@ imaging:
       max_num_buffer: 5
       image_frame_interval: null
       pixel_size: 5.86e-06
+      objective_mag: 20
+      telescope_mag: 3.333
   ib:
     relative_angle: 52
     autosave: false
