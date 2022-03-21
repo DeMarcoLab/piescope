@@ -100,7 +100,7 @@ lamella:
   lamella_width: 1.2e-05
   lamella_height: 1.0e-05
   milling_depth: 5.0e-06
-  milling_current: 10.1e-12
+  milling_current: 0.89e-9
   # milling_current: 2.4e-09
   hfw: 0.00015
   upper_height: 5.0e-06
