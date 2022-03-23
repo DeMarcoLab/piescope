@@ -142,7 +142,6 @@ def correlate_images(fluorescence_image_rgb, fibsem_image, output_path, matched_
         Expecting .data attribute of shape (cols, rows, channels)
     output : str
         Path to save location
-
     matched_points_dict : dict
     Dictionary of points selected in the correlation window
     """
