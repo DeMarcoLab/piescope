@@ -6,7 +6,7 @@ pyserial
 PyYAML
 nidaqmx
 pypylon
-pipython
+pipython==2.6.0.1
 opencv-python
 # dev
 flake8

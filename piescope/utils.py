@@ -269,12 +269,18 @@ class Crosshair:
     rectangle_vertical: plt.Rectangle
 
 
-def create_crosshair(image: np.ndarray or AdornedImage, settings: dict):
+def create_crosshair(image: np.ndarray or AdornedImage, settings: dict, x=None, y=None):
     if type(image) == AdornedImage:
         image = image.data
 
-    midx = int(image.shape[1] / 2)
-    midy = int(image.shape[0] / 2)
+    if x is None:
+        midx = int(image.shape[1] / 2)
+    else:
+        midx = x
+    if y is None:
+        midy = int(image.shape[0] / 2)
+    else:
+        midy = y
 
     cross_width = int(
         settings["imaging"]["crosshairs"]["thickness"] / 100 * image.shape[1]
