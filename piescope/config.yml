@@ -52,7 +52,7 @@ lm:
     - 143
     - 51
     power: 10.0
-    exposure_time: 100.0
+    exposure_time: 1000.0
     volume_enabled: false
   - name: laser640
     wavelength: 640
@@ -62,7 +62,7 @@ lm:
     - 148
     - 43
     - 35
-    power: 21.0
+    power: 10.0
     exposure_time: 1000.0
     volume_enabled: true
 imaging:
