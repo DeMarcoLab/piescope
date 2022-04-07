@@ -90,15 +90,15 @@ def save_image(
     # Make sure the output file format is acceptable
     if not destination.endswith(".tiff"):
         destination += ".tiff"
-        
+
     # Append timestamp string to filename, if needed
     if timestamp:
         timestamp_string = datetime.now().strftime("_%Y-%m-%dT%H%M%S%f")
         base, ext = os.path.splitext(destination)
         destination = base + timestamp_string + ext
-    
+
     os.makedirs(os.path.dirname(destination), exist_ok=True)
-    
+
     if isinstance(image, AdornedImage):
         image.save(destination)
         logging.debug("Saved: {}".format(destination))
@@ -113,14 +113,15 @@ def save_image(
         image = skimage.util.img_as_uint(image)  # 16 bit unsigned int
 
     # if saving a volume:
-    if image.ndim == 6:  # (CAZPYX) --> (AZPYX)
+    if image.ndim == 6:  # (CPZAYX) --> (PZAYX)
+        metadata.update({"axes": "CPZAYX"})
         tifffile.imwrite(destination, image, bigtiff=True, metadata=metadata)
         temp_destination = destination
         print(f'Image shape when saving: {image.shape}')
         # volume_split = np.zeros(image.shape)
         for i in range(image.shape[0]):
             # volume_split[:, i] = image[:, i]
-            metadata.update({"axes": "AZPYX"})
+            metadata.update({"axes": "PZAYX"})
             temp_destination = (destination.replace(".tiff", "") + "_channel_" + str(i) + ".tiff")
             tifffile.imwrite(temp_destination, image[i], bigtiff=True, metadata=metadata)
         return
@@ -131,7 +132,7 @@ def save_image(
         metadata.update({"axes": "CYX"})
 
     skimage.io.imsave(destination, image, imagej=True, metadata=metadata)
-    
+
     logging.debug("Saved: {}".format(destination))
 
 
@@ -150,6 +151,7 @@ def max_intensity_projection(image: np.ndarray) -> np.ndarray:
     """
     results = []
 
+    #CPZAYX
     if image.ndim == 6:
         for channel_image in image:
             # collapse angles, phases and planes, keeping cols, rows and channels
@@ -158,6 +160,7 @@ def max_intensity_projection(image: np.ndarray) -> np.ndarray:
 
         # put channels on last axis
         projected_max_intensity = np.stack(results, axis=-1)
+        #YXC
         return projected_max_intensity
 
     else:
@@ -207,7 +210,7 @@ def read_config(config_filename):
 
 def write_config(config_filename, config):
 
-    config['imaging']['lm']['trigger_mode'] = config['imaging']['lm']['trigger_mode'].name 
+    config['imaging']['lm']['trigger_mode'] = config['imaging']['lm']['trigger_mode'].name
 
     with open(config_filename, "w") as file:
         yaml.safe_dump(config, file, sort_keys=False)

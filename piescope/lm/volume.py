@@ -38,14 +38,14 @@ def acquire_volume(
         mirror_controller (PIController): Mirror Controller
         objective_stage (StageController): Objective Stage Controller
         detector (Basler): Basler Detector
-        arduino (Arduino): Arduino 
+        arduino (Arduino): Arduino
         settings (dict): configuration settings of the user interface
 
     Returns:
         np.ndarray: volume stack of images, always 6 dimensional (CAZPYX)
     """
     time_delay = settings["imaging"]["volume"]["time_delay"]
-    if imaging_type != ImagingType.WIDEFIELD:    
+    if imaging_type != ImagingType.WIDEFIELD:
         angles = settings["imaging"]["SIM"]["angles"]
         phases = settings["imaging"]["SIM"]["phases"]
     else:
@@ -111,26 +111,28 @@ def acquire_volume(
                 arduino=arduino,
             )
 
+            # CPAYX
             slice_reshaped = np.array(slice).reshape(
                 volume_enabled_laser_count,
-                angles,
                 phases,
+                angles,
                 array_shape[0],
                 array_shape[1],
             )
 
+            # CPAYX
             img_index = list(range(len(slice)))
             for channel in range(volume_enabled_laser_count):
-                for angle in range(angles):
-                    for phase in range(phases):
+                for phase in range(phases):
+                    for angle in range(angles):
                         # get the index for each parameters image in the slice
                         # see notebook for details
                         idx = img_index[channel::volume_enabled_laser_count][
-                            angle::angles
-                        ][phase::phases][0]
+                            phase::phases
+                        ][angle::angles][0]
                         # idx = test[a::N_LASERS][b::N_ANGLES][c::N_PHASES]
-                        slice_reshaped[channel, angle, phase] = slice[idx]
-            volume[:, :, z_slice, :, :, :] = slice_reshaped  # (CAZPYX)
+                        slice_reshaped[channel, phase, angle] = slice[idx]
+            volume[:, :, z_slice, :, :, :] = slice_reshaped  # (CPZAYX)
 
             # Move objective lens stage
         target_position = (
@@ -156,7 +158,7 @@ def acquire_volume(
             logger.debug("Difference is: {}".format(str(difference)))
             count = count + 1
         piescope.lm.structured.single_line_pulse(100000, settings["imaging"]["volume"]["slice_interrupt_pin"])
-        
+
 
     # Finally, return the objective lens stage too original position
     objective_stage.move_absolute(original_center_position)
@@ -213,6 +215,7 @@ def grab_slice(
             )
         grabResult.Release()
     detector.camera.Close()
+    # CPAYX
     return images
 
 
@@ -330,7 +333,7 @@ def grab_slice(
 #     if mode != "widefield":
 #         angles = 3
 #         phases = 3
-    
+
 
 #     # Create volume array to put the results into
 #     array_shape = np.shape(detector.camera_grab())  # no lasers on
