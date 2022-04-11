@@ -3,10 +3,10 @@ from enum import Enum, auto
 import logging
 
 class StagePosition(Enum):
-    WIDEFIELD = [2, -3]
-    HORIZONTAL = [-3, -3]
+    WIDEFIELD = [3, -2]
+    HORIZONTAL = [-2, -2]
     SIXTY = [3, 3]
-    ONETWENTY = [-2, 2]
+    ONETWENTY = [-2, 3]
 
 
 

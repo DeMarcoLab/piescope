@@ -68,7 +68,7 @@ def acquire_volume(
     )  # no lasers on
     laser_controller.set_laser_power(laser_controller.current_laser, temp_power)
 
-    logging.info(f"Lasers: {laser_controller.lasers.values()}")
+    # logging.info(f"Lasers: {laser_controller.lasers.values()}")
 
     volume_enabled_laser_count = 0
     for laser in laser_controller.lasers.values():
