@@ -3,8 +3,8 @@ from enum import Enum, auto
 import logging
 
 h_move = [0.0164, 0]
-s_move = [0.008031, 0.006564]
-o_move = [-0.008031, 0.006564]
+s_move = [0.008031*2, 0.006564*2]
+o_move = [-0.008031*2, 0.006564*2]
 
 class MirrorPosition(Enum):
     WIDEFIELD = [3, -2]
