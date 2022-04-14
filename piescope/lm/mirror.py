@@ -2,13 +2,21 @@ from pipython import GCSDevice
 from enum import Enum, auto
 import logging
 
-class StagePosition(Enum):
+h_move = [0.0164, 0]
+s_move = [0.008031, 0.006564]
+o_move = [-0.008031, 0.006564]
+
+class MirrorPosition(Enum):
     WIDEFIELD = [3, -2]
     HORIZONTAL = [-2, -2]
+    HORIZONTAL_120 = [HORIZONTAL[0]+h_move[0], HORIZONTAL[1]+h_move[1]]
+    HORIZONTAL_240 = [HORIZONTAL[0]+2*h_move[0], HORIZONTAL[1]+2*h_move[1]]
     SIXTY = [3, 3]
+    SIXTY_120 = [SIXTY[0]+s_move[0], SIXTY[1]+s_move[1]]
+    SIXTY_240 = [SIXTY[0]+2*s_move[0], SIXTY[1]+2*s_move[1]]
     ONETWENTY = [-2, 3]
-
-
+    ONETWENTY_120 = [ONETWENTY[0]+o_move[0], ONETWENTY[1]+o_move[1]]
+    ONETWENTY_240 = [ONETWENTY[0]+2*o_move[0], ONETWENTY[1]+2*o_move[1]]
 
 class StageMacro(Enum):
     MAIN = auto()
@@ -30,36 +38,24 @@ class PIController:
         self.device = GCSDevice()
         self._open_device()
         self.axes = self.device.allaxes
-        self.move_to(StagePosition.WIDEFIELD)
-        self.current_position = StagePosition.WIDEFIELD
-        self.mode = ImagingType.WIDEFIELD
+        self.move_to(MirrorPosition.WIDEFIELD)
+        self.current_position = MirrorPosition.WIDEFIELD
+        self.set_mode(mode=ImagingType.WIDEFIELD)
 
     def home(self) -> None:
         """Returns the stage to 0 on all axes"""
         GCSDevice.MOV(self.device, self.axes, len(self.axes)*[0])
 
-    def move_to(self, stage_position: StagePosition) -> None:
+    def move_to(self, mirror_position: MirrorPosition) -> None:
         self.stopAll()
-        GCSDevice.MOV(self.device, self.axes, stage_position.value)
+        GCSDevice.MOV(self.device, self.axes, mirror_position.value)
         self.start_macro(StageMacro.ONTARGET)
-        self.current_position = stage_position
+        self.current_position = mirror_position
         logging.info(f'Current position: {self.current_position.name}')
 
     def get_current_position(self):
         """Returns currently set position, not necessarily actual position"""
         return self.current_position.value
-
-    def next_position(self):
-        """Moves to the next SIM angle"""
-        if self.mode == ImagingType.WIDEFIELD:
-            return
-        self.stopAll()
-        if self.current_position == StagePosition.SIXTY:
-            self.move_to(StagePosition.ONETWENTY)
-        elif self.current_position == StagePosition.ONETWENTY:
-            self.move_to(StagePosition.HORIZONTAL)
-        elif self.current_position == StagePosition.HORIZONTAL:
-            self.move_to(StagePosition.SIXTY)
 
     def set_mode(self, mode=ImagingType.WIDEFIELD):
         self.mode = mode
