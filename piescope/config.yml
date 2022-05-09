@@ -4,8 +4,8 @@ system:
   default_path: log/
   pretilt: 27
   relative_lm_position:
-  - 0.0499092
-  - -0.0001143
+  - 0.0499651
+  - -0.0000472
   fibsem_min_position: -10.e-3
   fibsem_max_position: 10.e-3
   lm_min_position: 40.e-3
