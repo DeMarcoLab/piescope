@@ -115,6 +115,9 @@ class Basler:
                 raise e
         return max_exposure
 
+    def close_camera(self):
+        self.camera.Close()
+
 class Hamamatsu:
     """Class for the Hamamatsu detector"""
     def __init__(self, settings: dict) -> None:
@@ -164,4 +167,5 @@ class Hamamatsu:
         self.camera.buf_release()
         self.camera.dev_close()
 
-
+    def close_camera(self):
+        self.camera.dev_close()
