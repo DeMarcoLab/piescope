@@ -124,6 +124,7 @@ class Hamamatsu:
         super(Hamamatsu, self).__init__()
         if Dcamapi.init() is not False:
             self.camera = Dcam(0)
+            self.camera.dev_open()
             self.pixel_size = 6.5e-6
             self.camera.prop_setvalue(DCAM_IDPROP.EXPOSURETIME, 0.01)
             self.camera.prop_setvalue(DCAM_IDPROP.TRIGGERSOURCE, 2)
@@ -146,16 +147,25 @@ class Hamamatsu:
             np.ndarray: an image of dimension (row, col)
         """
 
-        self.camera.dev_open()
+        # self.camera.dev_open()
         self.camera.cap_stop()
-
+        import time
         self.camera.buf_alloc(1)
         if self.camera.cap_snapshot() is not False:
             timeout_millisec = 10000
+            now = time.time()
+            structured.single_line_pulse(delay=laser.exposure_time, pin=laser.pin)
+            print(f'Exposure complete, took: {(time.time()-now)*1e3}ms')
+            now = time.time()
             while True:
                 if self.camera.wait_capevent_frameready(timeout_millisec) is not False:
-                    structured.single_line_pulse(delay=laser.exposure_time, pin=laser.pin)
-                    data = self.camera.buf_getlastframedata()
+                    print(f'Frame ready, took: {(time.time()-now)*1e3}ms')
+                    now = time.time()
+
+                    data = self.camera.buf_getframe(0)
+                    print(data)
+                    print(f'Data read, took: {(time.time()-now)*1e3}ms')
+                    now = time.time()
                     break
 
                 dcamerr = self.camera.lasterr()
@@ -165,7 +175,13 @@ class Hamamatsu:
                 else:
                     raise dcamerr
         self.camera.buf_release()
-        self.camera.dev_close()
+        print(f'Buffer released, took: {(time.time()-now)*1e3}ms')
+        now = time.time()
+        # self.camera.dev_close()
+        print(f'Camera close, took: {(time.time()-now)*1e3}ms')
+        now = time.time()
+
+        # return data
 
     def close_camera(self):
         self.camera.dev_close()
