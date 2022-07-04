@@ -1,10 +1,12 @@
 """Module for the Basler fluorescence detector."""
+from msilib.schema import Error
 import numpy as np
-import logging 
+import logging
 from piescope.lm import structured
 from piescope.lm.laser import Laser
 from piescope.lm.mirror import StageMacro
 from pypylon import pylon
+from piescope.lm.dcam.dcam import *
 
 from piescope.utils import TriggerMode
 from enum import Enum, auto
@@ -19,7 +21,7 @@ class Basler:
         )
         logging.info(f"Using {self.camera.GetDeviceInfo().GetModelName()} for light imaging.")
         self.camera.MaxNumBuffer = settings["imaging"]["lm"]["camera"]["max_num_buffer"]
-        self.pixel_size = 5.86e-6 
+        self.pixel_size = 5.86e-6
 
     def camera_grab(self, laser: Laser, settings: dict) -> np.ndarray:
         """Grabs a single fluorescence image
@@ -36,6 +38,7 @@ class Basler:
             np.ndarray: an image of dimension (row, col)
         """
         self.camera.Open()
+        # TODO: Put this camera.open on init
         self.camera.StopGrabbing()
 
         trigger_mode = settings["imaging"]["lm"]["trigger_mode"]
@@ -112,3 +115,66 @@ class Basler:
             except Exception as e:
                 raise e
         return max_exposure
+
+    def close_camera(self):
+        self.camera.Close()
+
+class Hamamatsu:
+    """Class for the Hamamatsu detector"""
+    def __init__(self, settings: dict) -> None:
+        super(Hamamatsu, self).__init__()
+        if Dcamapi.init() is not False:
+            self.camera = Dcam(0)
+            self.camera.dev_open()
+            self.pixel_size = 6.5e-6
+            self.camera.prop_setvalue(DCAM_IDPROP.EXPOSURETIME, 0.01)
+            self.camera.prop_setvalue(DCAM_IDPROP.TRIGGERSOURCE, 2)
+            self.camera.prop_setvalue(DCAM_IDPROP.TRIGGERACTIVE, 2)
+            self.camera.prop_setvalue(DCAM_IDPROP.TRIGGER_MODE, 1)
+            self.camera.prop_setvalue(DCAM_IDPROP.TRIGGERPOLARITY, 2)
+
+    def camera_grab(self, laser: Laser, settings: dict) -> np.ndarray:
+        """Grabs a single fluorescence image
+
+        Args:
+            laser (Laser): the laser to use when taking the image
+            settings (dict): settings dictionary
+
+        Raises:
+            e: exception
+            RuntimeError: times out if takes too long to obtain an image
+
+        Returns:
+            np.ndarray: an image of dimension (row, col)
+        """
+
+        # self.camera.cap_stop()
+        # self.camera.dev_open()
+        self.camera.buf_alloc(1)
+        
+        if self.camera.cap_start() is not False:
+            timeout_millisec = 10000
+            structured.single_line_pulse(delay=laser.exposure_time, pin=laser.pin)
+            while True:
+                if self.camera.wait_capevent_frameready(timeout_millisec) is not False:
+                    data = self.camera.buf_getframe(0)
+                    break
+
+                dcamerr = self.camera.lasterr()
+                if dcamerr.is_timeout():
+                    raise TimeoutError()
+                else:
+                    print(dcamerr) 
+            
+            self.camera.cap_stop()
+            self.camera.buf_release()
+            # self.camera.dev_close()
+            image = np.flipud(data[-1]).T
+            # image = np.fliplr(image)
+            return image
+        print(self.camera.lasterr())
+
+    # TODO: once basler has been changed to have open on init, remove this
+    def close_camera(self):
+        pass
+        # self.camera.dev_close()
