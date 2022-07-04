@@ -170,13 +170,6 @@ class Hamamatsu:
             self.camera.buf_release()
             # self.camera.dev_close()
             image = np.flipud(data[-1]).T
-
-            print("pre_shape: ", image.shape)
-            # cy, cx = image.shape[0] //2 , image.shape[1] // 2
-            # h, w = cy // 2, cx // 2
-            # image = image[cy-h:cy+h, cx-w:cx+w]
-            print("post shape: ", image.shape)
-
             # image = np.fliplr(image)
             return image
         print(self.camera.lasterr())
