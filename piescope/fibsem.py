@@ -1,8 +1,8 @@
 import logging
-from re import M
 
 import numpy as np
 from piescope.utils import Modality
+from autoscript_sdb_microscope_client import SdbMicroscopeClient
 
 """Module for interacting with the FIBSEM using Autoscript."""
 
@@ -36,7 +36,7 @@ def move_to_microscope(microscope, settings: dict):
     microscope.specimen.stage.relative_move(new_position)
 
 
-def new_ion_image(microscope, settings=None):
+def new_ion_image(microscope:SdbMicroscopeClient, settings=None):
     """Take new ion beam image.
 
     Uses whichever camera settings (resolution, dwell time, etc) are current.

@@ -38,6 +38,7 @@ class Basler:
             np.ndarray: an image of dimension (row, col)
         """
         self.camera.Open()
+        # TODO: Put this camera.open on init
         self.camera.StopGrabbing()
 
         trigger_mode = settings["imaging"]["lm"]["trigger_mode"]
@@ -147,41 +148,33 @@ class Hamamatsu:
             np.ndarray: an image of dimension (row, col)
         """
 
+        # self.camera.cap_stop()
         # self.camera.dev_open()
-        self.camera.cap_stop()
-        import time
         self.camera.buf_alloc(1)
-        if self.camera.cap_snapshot() is not False:
+        
+        if self.camera.cap_start() is not False:
             timeout_millisec = 10000
-            now = time.time()
             structured.single_line_pulse(delay=laser.exposure_time, pin=laser.pin)
-            print(f'Exposure complete, took: {(time.time()-now)*1e3}ms')
-            now = time.time()
             while True:
                 if self.camera.wait_capevent_frameready(timeout_millisec) is not False:
-                    print(f'Frame ready, took: {(time.time()-now)*1e3}ms')
-                    now = time.time()
-
                     data = self.camera.buf_getframe(0)
-                    print(data)
-                    print(f'Data read, took: {(time.time()-now)*1e3}ms')
-                    now = time.time()
                     break
 
                 dcamerr = self.camera.lasterr()
                 if dcamerr.is_timeout():
                     raise TimeoutError()
-
                 else:
-                    raise dcamerr
-        self.camera.buf_release()
-        print(f'Buffer released, took: {(time.time()-now)*1e3}ms')
-        now = time.time()
-        # self.camera.dev_close()
-        print(f'Camera close, took: {(time.time()-now)*1e3}ms')
-        now = time.time()
+                    print(dcamerr) 
+            
+            self.camera.cap_stop()
+            self.camera.buf_release()
+            # self.camera.dev_close()
+            image = np.flipud(data[-1]).T
+            # image = np.fliplr(image)
+            return image
+        print(self.camera.lasterr())
 
-        # return data
-
+    # TODO: once basler has been changed to have open on init, remove this
     def close_camera(self):
-        self.camera.dev_close()
+        pass
+        # self.camera.dev_close()
