@@ -3,18 +3,11 @@ import logging
 import numpy as np
 from piescope.utils import Modality
 from autoscript_sdb_microscope_client import SdbMicroscopeClient
+from autoscript_sdb_microscope_client.structures import GrabFrameSettings
 
 """Module for interacting with the FIBSEM using Autoscript."""
 
-
-def initialise(ip_address='10.0.0.1'):
-    """Initialise connection to FIBSEM microscope with Autoscript."""
-    from autoscript_sdb_microscope_client import SdbMicroscopeClient
-    microscope = SdbMicroscopeClient()
-    microscope.connect(ip_address)
-    return microscope
-
-def move_to_microscope(microscope, settings: dict):
+def move_to_microscope(microscope: SdbMicroscopeClient, settings: dict):
     from autoscript_sdb_microscope_client.structures import StagePosition
     x, y = settings['system']['relative_lm_position']
     current_position_x = microscope.specimen.stage.current_position.x
@@ -36,191 +29,89 @@ def move_to_microscope(microscope, settings: dict):
     microscope.specimen.stage.relative_move(new_position)
 
 
-def new_ion_image(microscope:SdbMicroscopeClient, settings=None):
-    """Take new ion beam image.
+# def new_ion_image(microscope:SdbMicroscopeClient, settings: GrabFrameSettings = None):
+#     """Take new ion beam image.
 
-    Uses whichever camera settings (resolution, dwell time, etc) are current.
+#     Uses whichever camera settings (resolution, dwell time, etc) are current.
 
-    Parameters
-    ----------
-    microscope : Autoscript microscope object.
+#     Parameters
+#     ----------
+#     microscope : Autoscript microscope object.
 
-    Returns
-    -------
-    AdornedImage
-        If the returned AdornedImage is named 'image', then:
-        image.data = a numpy array of the image pixels
-        image.metadata.binary_result.pixel_size.x = image pixel size in x
-        image.metadata.binary_result.pixel_size.y = image pixel size in y
-    """
-    microscope.imaging.set_active_view(2)  # the ion beam view
-    if settings is not None:
-        image = microscope.imaging.grab_frame(settings)
-    else:
-        image = microscope.imaging.grab_frame()
-    return image
-
-
-def new_electron_image(microscope, settings=None):
-    """Take new electron beam image.
-
-    Uses whichever camera settings (resolution, dwell time, etc) are current.
-
-    Parameters
-    ----------
-    microscope : Autoscript microscope object.
-
-    Returns
-    -------
-    AdornedImage
-        If the returned AdornedImage is named 'image', then:
-        image.data = a numpy array of the image pixels
-        image.metadata.binary_result.pixel_size.x = image pixel size in x
-        image.metadata.binary_result.pixel_size.y = image pixel size in y
-    """
-    microscope.imaging.set_active_view(1)  # the electron beam view
-    if settings is not None:
-        image = microscope.imaging.grab_frame(settings)
-    else:
-        image = microscope.imaging.grab_frame()
-    return image
+#     Returns
+#     -------
+#     AdornedImage
+#         If the returned AdornedImage is named 'image', then:
+#         image.data = a numpy array of the image pixels
+#         image.metadata.binary_result.pixel_size.x = image pixel size in x
+#         image.metadata.binary_result.pixel_size.y = image pixel size in y
+#     """
+#     microscope.imaging.set_active_view(2)  # the ion beam view
+#     if settings is not None:
+#         image = microscope.imaging.grab_frame(settings)
+#     else:
+#         image = microscope.imaging.grab_frame()
+#     return image
 
 
-def last_ion_image(microscope):
-    """Get the last previously acquired ion beam image.
+# def new_electron_image(microscope, settings=None):
+#     """Take new electron beam image.
 
-    Parameters
-    ----------
-    microscope : Autoscript microscope object.
+#     Uses whichever camera settings (resolution, dwell time, etc) are current.
 
-    Returns
-    -------
-    AdornedImage
-        If the returned AdornedImage is named 'image', then:
-        image.data = a numpy array of the image pixels
-        image.metadata.binary_result.pixel_size.x = image pixel size in x
-        image.metadata.binary_result.pixel_size.y = image pixel size in y
-    """
-    microscope.imaging.set_active_view(2)  # the ion beam view
-    image = microscope.imaging.get_image()
-    return image
+#     Parameters
+#     ----------
+#     microscope : Autoscript microscope object.
 
+#     Returns
+#     -------
+#     AdornedImage
+#         If the returned AdornedImage is named 'image', then:
+#         image.data = a numpy array of the image pixels
+#         image.metadata.binary_result.pixel_size.x = image pixel size in x
+#         image.metadata.binary_result.pixel_size.y = image pixel size in y
+#     """
+#     microscope.imaging.set_active_view(1)  # the electron beam view
+#     if settings is not None:
+#         image = microscope.imaging.grab_frame(settings)
+#     else:
+#         image = microscope.imaging.grab_frame()
+#     return image
 
-def last_electron_image(microscope):
-    """Get the last previously acquired electron beam image.
+# TODO: replace with fibsem.conversions...
+# def pixel_to_realspace_coordinate(coord, image):
+#     """Covert pixel image coordinate to real space coordinate.
 
-    Parameters
-    ----------
-    microscope : Autoscript microscope object.
+#     This conversion deliberately ignores the nominal pixel size in y,
+#     as this can lead to inaccuraccies if the sample is not flat in y.
 
-    Returns
-    -------
-    AdornedImage
-        If the returned AdornedImage is named 'image', then:
-        image.data = a numpy array of the image pixels
-        image.metadata.binary_result.pixel_size.x = image pixel size in x
-        image.metadata.binary_result.pixel_size.y = image pixel size in y
-    """
-    microscope.imaging.set_active_view(1)  # the electron beam view
-    image = microscope.imaging.get_image()
-    return image
+#     Parameters
+#     ----------
+#     coord : listlike, float
+#         In x, y format & pixel units. Origin is at the top left.
 
+#     image : AdornedImage
+#         Image the coordinate came from.
 
-def create_rectangular_pattern(microscope, image, x0, x1, y0, y1, depth=1e-6):
-    """Create a rectangular pattern that is sent to the FIBSEM controller.
+#     Returns
+#     -------
+#     realspace_coord
+#         xy coordinate in real space. Origin is at the image center.
+#         Output is in (x, y) format.
+#     """
+#     coord = np.array(coord).astype(np.float64)
+#     if len(image.data.shape) > 2:
+#         y_shape, x_shape = image.data.shape[0:2]
+#     else:
+#         y_shape, x_shape = image.data.shape
 
-    Parameters
-    ----------
-    microscope : Microscope class.
-        Connection to Autoscript client
-    image : Adorned Image
-        The image to draw rectangle on
-    x0 : float
-        X co-ord of top left corner of rectangle
-        Pixel coordinates, origin at top left corner.
-    x1 : float
-        X co-ord of bottom right corner of rectangle
-        Pixel coordinates, origin at top left corner.
-    y0 : float
-        Y co-ord of top left corner of rectangle
-        Pixel coordinates, origin at top left corner.
-    y1 : float
-        Y co-ord of bottom right corner of rectangle
-        Pixel coordinates, origin at top left corner.
-    depth : float
-        How deep to mill the ion beam pattern.
-        Realspace units, in meters. Default is 1e-6 == 1 micron depth.
-
-    Returns
-    -------
-    rectangle_milling_pattern
-        Autoscript rectangle milling pattern. RectanglePattern class object.
-    """
-    if x0 is None or x1 is None or y0 is None or y1 is None:
-        logging.warning("No rectangle selected")
-        return
-    microscope.imaging.set_active_view(2)  # the ion beam view
-    microscope.patterning.clear_patterns()
-    pixelsize_x = image.metadata.binary_result.pixel_size.x
-    pixelsize_y = image.metadata.binary_result.pixel_size.y
-
-    if x0 > x1:
-        temp = x0
-        x0 = x1
-        x1 = temp
-
-    if y0 > y1:
-        temp = y0
-        y0 = y1
-        y1 = temp
-
-
-    width = (x1-x0) * pixelsize_x   # real space (meters)
-    height = (y1-y0) * pixelsize_y  # real space (meters)
-
-    center_x_pixels = (x0 + ((x1-x0)/2))
-    center_y_pixels = (y0 + ((y1-y0)/2))
-
-    center_x_realspace, center_y_realspace = pixel_to_realspace_coordinate(
-        [center_x_pixels, center_y_pixels], image)
-    rectangle_milling_pattern = microscope.patterning.create_rectangle(
-        center_x_realspace, center_y_realspace, width, height, depth)
-    return rectangle_milling_pattern
-
-
-def pixel_to_realspace_coordinate(coord, image):
-    """Covert pixel image coordinate to real space coordinate.
-
-    This conversion deliberately ignores the nominal pixel size in y,
-    as this can lead to inaccuraccies if the sample is not flat in y.
-
-    Parameters
-    ----------
-    coord : listlike, float
-        In x, y format & pixel units. Origin is at the top left.
-
-    image : AdornedImage
-        Image the coordinate came from.
-
-    Returns
-    -------
-    realspace_coord
-        xy coordinate in real space. Origin is at the image center.
-        Output is in (x, y) format.
-    """
-    coord = np.array(coord).astype(np.float64)
-    if len(image.data.shape) > 2:
-        y_shape, x_shape = image.data.shape[0:2]
-    else:
-        y_shape, x_shape = image.data.shape
-
-    pixelsize_x = image.metadata.binary_result.pixel_size.x
-    # deliberately don't use the y pixel size, any tilt will throw this off
-    coord[1] = y_shape - coord[1]  # flip y-axis for relative coordinate system
-    # reset origin to center
-    coord -= np.array([x_shape / 2, y_shape / 2]).astype(np.int32)
-    realspace_coord = list(np.array(coord) * pixelsize_x)  # to real space
-    return realspace_coord
+#     pixelsize_x = image.metadata.binary_result.pixel_size.x
+#     # deliberately don't use the y pixel size, any tilt will throw this off
+#     coord[1] = y_shape - coord[1]  # flip y-axis for relative coordinate system
+#     # reset origin to center
+#     coord -= np.array([x_shape / 2, y_shape / 2]).astype(np.int32)
+#     realspace_coord = list(np.array(coord) * pixelsize_x)  # to real space
+#     return realspace_coord
 
 
 def autocontrast(microscope, view=2):

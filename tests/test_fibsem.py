@@ -17,11 +17,6 @@ except Exception as e:
                 allow_module_level=True)
 
 
-def test_initialise():
-    """Test connecting to the microscope offline with localhost."""
-    microscope = piescope.fibsem.initialise("localhost")
-
-
 @pytest.fixture
 def microscope():
     from autoscript_sdb_microscope_client import SdbMicroscopeClient
@@ -55,61 +50,6 @@ def test_move_to_electron_microscope(microscope):
     assert np.isclose(final_position.z, original_position.z)
     assert np.isclose(final_position.r, original_position.r)
     assert np.isclose(final_position.t, original_position.t)
-
-
-def test_new_ion_image(microscope):
-    result = piescope.fibsem.new_ion_image(microscope)
-    assert microscope.imaging.get_active_view() == 2
-    assert result.data.shape == (884, 1024)
-
-
-def test_new_electron_image(microscope):
-    result = piescope.fibsem.new_electron_image(microscope)
-    assert microscope.imaging.get_active_view() == 1
-    assert result.data.shape == (884, 1024)
-
-
-def test_last_ion_image(microscope):
-    result = piescope.fibsem.last_ion_image(microscope)
-    assert microscope.imaging.get_active_view() == 2
-    assert result.data.shape == (884, 1024)
-
-
-def test_last_electron_image(microscope):
-    result = piescope.fibsem.last_electron_image(microscope)
-    assert microscope.imaging.get_active_view() == 1
-    assert result.data.shape == (884, 1024)
-
-
-def test_create_rectangular_pattern(microscope, image):
-    x0 = 2
-    x1 = 8
-    y0 = 3
-    y1 = 7
-    depth = 1e-6
-    output = piescope.fibsem.create_rectangular_pattern(
-        microscope, image, x0, x1, y0, y1, depth)
-    expected_center_x = 0
-    expected_center_y = 0
-    expected_width = 6e-6
-    expected_height = 4e-6
-    assert np.isclose(output.center_x, expected_center_x)
-    assert np.isclose(output.center_y, expected_center_y)
-    assert np.isclose(output.width, expected_width)
-    assert np.isclose(output.height, expected_height)
-    assert np.isclose(output.depth, depth)  # depth is unchanged
-    assert np.isclose(output.rotation, 0)  # no rotation by befault
-
-
-def test_empty_rectangular_pattern(microscope, image):
-    x0 = None
-    x1 = None
-    y0 = 3
-    y1 = 7
-    depth = 1e-6
-    output = piescope.fibsem.create_rectangular_pattern(
-        microscope, image, x0, x1, y0, y1, depth)
-    assert output is None
 
 
 @pytest.mark.parametrize(

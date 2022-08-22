@@ -1,0 +1,22 @@
+name: piescope
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - matplotlib=3.0.2
+  - numpy
+  - scikit-image>=0.15.0
+  - scipy>=1.3.0
+  - pyserial
+  - pyyaml
+  - nidaqmx
+  - pypylon
+  - pipython==2.6.0.1
+  - opencv 
+  - pyqt5
+  - qimage2ndarray
+  - # dev
+  - flake8
+  - pytest
+  - ipython
+  - jupyter

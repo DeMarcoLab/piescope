@@ -20,6 +20,26 @@ class Laser:
     lineEdit: QLineEdit
     volumeCheckBox: QCheckBox
 
+    @staticmethod
+    def __from_dict__(settings: dict) -> 'Laser':
+
+        laser = Laser(
+            name=settings["name"],
+            serial_id=settings["ID"],
+            wavelength=settings["wavelength"],
+            power=settings["power"],
+            exposure_time=settings["exposure_time"],
+            enabled=False,
+            pin=settings["pin"],
+            volume_enabled=settings["volume_enabled"],
+            colour=settings["colour"],
+            spinBox=None,
+            lineEdit=None,
+            volumeCheckBox=None
+        )
+        return laser
+
+
 
 class LaserController:
     def __init__(self, settings):
