@@ -114,85 +114,85 @@ def move_to_microscope(microscope: SdbMicroscopeClient, settings: dict):
 #     return realspace_coord
 
 
-def autocontrast(microscope, view=2):
-    """Automatically adjust the microscope image contrast.
+# def autocontrast(microscope, view=2):
+#     """Automatically adjust the microscope image contrast.
 
-    Parameters
-    ----------
-    microscope : Autoscript microscope object.
+#     Parameters
+#     ----------
+#     microscope : Autoscript microscope object.
 
-    Returns
-    -------
-    RunAutoCbSettings
-        Automatic contrast brightness settings.
-    """
-    from autoscript_sdb_microscope_client.structures import RunAutoCbSettings
-    microscope.imaging.set_active_view(view)
-    autocontrast_settings = RunAutoCbSettings(
-        method="MaxContrast",
-        resolution="768x512",  # low resolution, so as not to damage the sample
-        number_of_frames=5,
-    )
-    # logging.info("Automatically adjusting contrast...")
-    microscope.auto_functions.run_auto_cb()
-    return autocontrast_settings
-
-
-def update_camera_settings(camera_dwell_time, image_resolution):
-    """Create new FIBSEM camera settings using Austoscript GrabFrameSettings.
-
-    Parameters
-    ----------
-    camera_dwell_time : float
-        Image acquisition dwell time in seconds.
-    image_resolution : str
-        String describing image resolution. Format is pixel width by height.
-        Common values include:
-            "1536x1024"
-            "3072x2048"
-            "6144x4096"
-            "768x512"
-        The full list of available values may differ between instruments.
-        See microscope.beams.ion_beam.scanning.resolution.available_values
-
-    Returns
-    -------
-    camera_settings
-        AutoScript GrabFrameSettings object instance.
-    """
-    from autoscript_sdb_microscope_client.structures import GrabFrameSettings
-    camera_settings = GrabFrameSettings(
-        resolution=image_resolution,
-        dwell_time=camera_dwell_time
-    )
-    return camera_settings
+#     Returns
+#     -------
+#     RunAutoCbSettings
+#         Automatic contrast brightness settings.
+#     """
+#     from autoscript_sdb_microscope_client.structures import RunAutoCbSettings
+#     microscope.imaging.set_active_view(view)
+#     autocontrast_settings = RunAutoCbSettings(
+#         method="MaxContrast",
+#         resolution="768x512",  # low resolution, so as not to damage the sample
+#         number_of_frames=5,
+#     )
+#     # logging.info("Automatically adjusting contrast...")
+#     microscope.auto_functions.run_auto_cb()
+#     return autocontrast_settings
 
 
-def y_corrected_stage_movement(expected_y, stage_tilt, settings, image):
-    """Stage movement in Y, corrected for tilt of sample surface plane.
-    ----------
-    expected_y : in meters
-    stage_tilt : in radians        Can pass this directly microscope.specimen.stage.current_position.t
-    beam_type : BeamType, optional
-        BeamType.ELECTRON or BeamType.ION
-    Returns
-    -------
-    StagePosition
-        Stage position to pass to relative movement function.
-    """
-    from autoscript_sdb_microscope_client.structures import StagePosition
-    beam_type = image.metadata.acquisition.beam_type
-    if settings["system"]["pretilt"] == 0:
-        return StagePosition(x=0, y=expected_y, z=0)
-    if beam_type == 'Ion':
-        tilt_adjustment = np.deg2rad(settings["imaging"]["ib"]["relative_angle"] - settings['system']['pretilt'])
-    elif beam_type == 'Electron':
-        tilt_adjustment = np.deg2rad(-settings['system']['pretilt'])
-    else:
-        raise ValueError('Beam type of image not found')
-    tilt_radians = stage_tilt + tilt_adjustment
-    y_move = +np.cos(tilt_radians) * expected_y
-    z_move = -np.sin(tilt_radians) * expected_y
-    logging.info(f"drift correction: the corrected Y shift is {y_move:.3e} meters")
-    logging.info(f"drift correction: the corrected Z shift is  {z_move:.3e} meters")
-    return StagePosition(x=0, y=y_move, z=z_move)
+# def update_camera_settings(camera_dwell_time, image_resolution):
+#     """Create new FIBSEM camera settings using Austoscript GrabFrameSettings.
+
+#     Parameters
+#     ----------
+#     camera_dwell_time : float
+#         Image acquisition dwell time in seconds.
+#     image_resolution : str
+#         String describing image resolution. Format is pixel width by height.
+#         Common values include:
+#             "1536x1024"
+#             "3072x2048"
+#             "6144x4096"
+#             "768x512"
+#         The full list of available values may differ between instruments.
+#         See microscope.beams.ion_beam.scanning.resolution.available_values
+
+#     Returns
+#     -------
+#     camera_settings
+#         AutoScript GrabFrameSettings object instance.
+#     """
+#     from autoscript_sdb_microscope_client.structures import GrabFrameSettings
+#     camera_settings = GrabFrameSettings(
+#         resolution=image_resolution,
+#         dwell_time=camera_dwell_time
+#     )
+#     return camera_settings
+
+
+# def y_corrected_stage_movement(expected_y, stage_tilt, settings, image):
+#     """Stage movement in Y, corrected for tilt of sample surface plane.
+#     ----------
+#     expected_y : in meters
+#     stage_tilt : in radians        Can pass this directly microscope.specimen.stage.current_position.t
+#     beam_type : BeamType, optional
+#         BeamType.ELECTRON or BeamType.ION
+#     Returns
+#     -------
+#     StagePosition
+#         Stage position to pass to relative movement function.
+#     """
+#     from autoscript_sdb_microscope_client.structures import StagePosition
+#     beam_type = image.metadata.acquisition.beam_type
+#     if settings["system"]["pretilt"] == 0:
+#         return StagePosition(x=0, y=expected_y, z=0)
+#     if beam_type == 'Ion':
+#         tilt_adjustment = np.deg2rad(settings["imaging"]["ib"]["relative_angle"] - settings['system']['pretilt'])
+#     elif beam_type == 'Electron':
+#         tilt_adjustment = np.deg2rad(-settings['system']['pretilt'])
+#     else:
+#         raise ValueError('Beam type of image not found')
+#     tilt_radians = stage_tilt + tilt_adjustment
+#     y_move = +np.cos(tilt_radians) * expected_y
+#     z_move = -np.sin(tilt_radians) * expected_y
+#     logging.info(f"drift correction: the corrected Y shift is {y_move:.3e} meters")
+#     logging.info(f"drift correction: the corrected Z shift is  {z_move:.3e} meters")
+#     return StagePosition(x=0, y=y_move, z=z_move)
