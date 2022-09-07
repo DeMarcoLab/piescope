@@ -169,7 +169,8 @@ class Hamamatsu:
             self.camera.cap_stop()
             self.camera.buf_release()
             # self.camera.dev_close()
-            image = np.flipud(data[-1]).T
+            image = np.array(data[-1]).T
+            # image = np.flipud(data[-1]).T
             # image = np.fliplr(image)
             return image
         print(self.camera.lasterr())
