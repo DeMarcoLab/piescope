@@ -179,3 +179,19 @@ class Hamamatsu:
     def close_camera(self):
         pass
         # self.camera.dev_close()
+
+
+
+
+from abc import ABC, abstractmethod
+
+#abstract base class: Detector
+class Detector(ABC):
+
+    @abstractmethod
+    def camera_grab(self, laser: Laser, settings: dict) -> np.ndarray:
+        return 
+
+    @abstractmethod
+    def close(self):
+        pass

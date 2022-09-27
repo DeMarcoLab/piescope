@@ -307,3 +307,35 @@ def create_crosshair(image: np.ndarray or AdornedImage, settings: dict, x=None, 
     return Crosshair(
         rectangle_horizontal=rect_horizontal, rectangle_vertical=rect_vertical
     )
+
+
+
+import logging
+
+import numpy as np
+from piescope.utils import Modality
+from autoscript_sdb_microscope_client import SdbMicroscopeClient
+from autoscript_sdb_microscope_client.structures import GrabFrameSettings
+
+"""Module for interacting with the FIBSEM using Autoscript."""
+
+def move_to_microscope(microscope: SdbMicroscopeClient, settings: dict):
+    from autoscript_sdb_microscope_client.structures import StagePosition
+    x, y = settings['system']['relative_lm_position']
+    current_position_x = microscope.specimen.stage.current_position.x
+    fibsem_min = settings['system']['fibsem_min_position']
+    fibsem_max = settings['system']['fibsem_max_position']
+    lm_min = settings['system']['lm_min_position']
+    lm_max = settings['system']['lm_max_position']
+    
+    if fibsem_min < current_position_x < fibsem_max:
+        logging.info('Under FIBSEM, moving to light microscope')
+    elif lm_min < current_position_x < lm_max:
+        x = -x
+        y = -y
+        logging.info('Under light microscope, moving to FIBSEM')
+    else:
+        raise RuntimeError('Not positioned under the either microscope, cannot move to other microscope')
+
+    new_position = StagePosition(x=x, y=y, z=0, r=0, t=0)
+    microscope.specimen.stage.relative_move(new_position)

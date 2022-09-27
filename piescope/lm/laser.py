@@ -16,7 +16,7 @@ class Laser:
     pin: str
     volume_enabled: bool
     colour: list
-    spinBox: QDoubleSpinBox
+    spinBox: QDoubleSpinBox # remove this ui stuff
     lineEdit: QLineEdit
     volumeCheckBox: QCheckBox
 
